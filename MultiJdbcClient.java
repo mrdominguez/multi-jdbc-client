@@ -18,7 +18,7 @@
  * All-purpose JDBC client with an emphasis on HiveServer2 and Trino.
  * Author: Mariano Dominguez
  * Version: 2.0
- * Release date: 2023-06-01
+ * Release date: 2023-05-27
  */
 
 import java.sql.Connection;
