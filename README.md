@@ -13,7 +13,7 @@ All-purpose JDBC client with an emphasis on HiveServer2 and Trino.
 
 **Version 2.0**
 - Support for generic JDBC connectivity: `-s generic --url <jdbc_connection_string> --driverClass <jdbc_class_name>`
-- Prompt for password if not provided in command argument `-w,--password`
+- Prompt for password if not provided in command argument: `-w,--password`
 - Get all options (except `--service`) from properties file: `-f,--propFile`
   - The properties file has precedence over command-line options
 
@@ -93,8 +93,8 @@ krbPrincipal=admin
 query=select current_user
 
 $ java -cp MultiJdbcClient.jar MultiJdbcClient -s trino -propFile trino.properties
-propFile: trino.properties
 service: trino
+propFile: trino.properties
 user: admin
 host: *****
 port: 7778
