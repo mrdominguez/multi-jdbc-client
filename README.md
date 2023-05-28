@@ -13,7 +13,7 @@ All-purpose JDBC client with an emphasis on HiveServer2 and Trino.
 
 **Version 2.0**
 - Support for generic JDBC connectivity: `-s generic --url <jdbc_connection_string> --driverClass <jdbc_class_name>`
-- Prompt for password if not provided in command argument `-w`
+- Prompt for password if not provided in command argument `-w,--password`
 - Get all options (except `--service`) from properties file: `-f,--propFile`
   - The properties file has precedence over command-line options
 
@@ -83,7 +83,7 @@ trino _col0,  403.amzn.0 _col1,  hive _col2,  default _col3
 ---
 ```
 
-Using properties file:
+***Trino*** (using properties file)
 ```
 $ cat trino.properties
 host=*****
@@ -130,7 +130,7 @@ Connected to jdbc:hive2://*****:10000/default;principal=hive/_HOST@EC2.INTERNAL
 hadoop _c0,  3.1.3-amzn-3 rUnknown _c1,  default _c2
 ---
 ```
-***Generic: MariaDB***  (password input from console)
+***Generic: MariaDB*** (password input from console)
 ```
 $ java -cp MultiJdbcClient.jar MultiJdbcClient -s generic --url jdbc:mariadb://$(hostname -f):3306 \
 --driverClass org.mariadb.jdbc.Driver -u admin -w -q 'select current_user, version()'
