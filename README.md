@@ -130,7 +130,7 @@ Connected to jdbc:hive2://*****:10000/default;principal=hive/_HOST@EC2.INTERNAL
 hadoop _c0,  3.1.3-amzn-3 rUnknown _c1,  default _c2
 ---
 ```
-***Generic: MariaDB***
+***Generic: MariaDB***  (password input from console)
 ```
 $ java -cp MultiJdbcClient.jar MultiJdbcClient -s generic --url jdbc:mariadb://$(hostname -f):3306 \
 --driverClass org.mariadb.jdbc.Driver -u admin -w -q 'select current_user, version()'
