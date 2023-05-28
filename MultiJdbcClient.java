@@ -344,8 +344,8 @@ public class MultiJdbcClient {
 			System.exit(1);
 	}
 
-	if ( propFile != null ) System.out.println("propFile: " + propFile);
 	System.out.println("service: " + service);
+	if ( propFile != null ) System.out.println("propFile: " + propFile);
 	System.out.println("user: " + user);
 	if ( password != null ) System.out.println("password is set");
 	if ( !service.equals("generic") ) {
