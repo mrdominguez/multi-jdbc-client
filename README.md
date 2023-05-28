@@ -93,7 +93,7 @@ krbPrincipal=admin
 query=select current_user
 
 $ java -cp MultiJdbcClient.jar MultiJdbcClient -s trino -propFile trino.properties
-properties file: trino.properties
+propFile: trino.properties
 service: trino
 user: admin
 host: *****
