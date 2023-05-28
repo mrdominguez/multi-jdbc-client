@@ -62,7 +62,7 @@ usage: MultiJdbcClient [--b64keytab <arg>] [--b64krbConf <arg>] [-c <arg>] [-d <
 Note: `--service phoenix` is equivalent to `--service trino --catalog phoenix`.
 
 ## Sample Output
-***Trino***
+### Trino
 ```
 $ java -cp MultiJdbcClient.jar MultiJdbcClient -s trino -h $(hostname -f) \
 -k -q 'select current_user, version(), current_catalog, current_schema'
@@ -83,7 +83,7 @@ trino _col0,  403.amzn.0 _col1,  hive _col2,  default _col3
 ---
 ```
 
-***Trino*** (using properties file)
+Using properties file:
 ```
 $ cat trino.properties
 host=*****
@@ -110,7 +110,7 @@ admin _col0
 ---
 ```
 
-***Hive***
+### HiveServer2
 ```
 $ java -cp MultiJdbcClient.jar MultiJdbcClient -s hive -h $(hostname -f) \
 -k -q 'select current_user(), version(), current_database()'
@@ -130,7 +130,8 @@ Connected to jdbc:hive2://*****:10000/default;principal=hive/_HOST@EC2.INTERNAL
 hadoop _c0,  3.1.3-amzn-3 rUnknown _c1,  default _c2
 ---
 ```
-***Generic: MariaDB*** (password input from console)
+### Generic: MariaDB
+Password input from console:
 ```
 $ java -cp MultiJdbcClient.jar MultiJdbcClient -s generic --url jdbc:mariadb://$(hostname -f):3306 \
 --driverClass org.mariadb.jdbc.Driver -u admin -w -q 'select current_user, version()'
