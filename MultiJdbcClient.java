@@ -15,7 +15,7 @@
  */
 
 /*
- * HiveServer2/Trino and generic JDBC client
+ * All-purpose JDBC client with an emphasis on HiveServer2 and Trino.
  * Author: Mariano Dominguez
  * Version: 2.0
  * Release date: 2023-06-01
