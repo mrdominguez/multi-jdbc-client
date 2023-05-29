@@ -164,3 +164,23 @@ admin@% current_user,  8.0.23 version()
 - https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-auth
 - https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-common
 - https://mvnrepository.com/artifact/org.apache.hive/hive-jdbc
+
+This is the list of JAR files I used to compile the code:
+```
+aws-java-sdk-core-1.12.397.jar
+aws-java-sdk-s3-1.12.397.jar
+commons-cli-1.3.jar
+commons-collections-3.2.2.jar
+commons-configuration2-2.8.0.jar
+commons-io-2.8.0.jar
+commons-lang3-3.12.0.jar
+commons-logging-1.1.3.jar
+hadoop-auth-3.3.3-amzn-2.jar
+hadoop-common-3.3.3-amzn-2.jar
+hive-jdbc-3.1.3-amzn-3-standalone.jar
+jackson-annotations-2.12.7.jar
+jackson-core-2.12.7.jar
+jackson-databind-2.12.7.1.jar
+joda-time-2.9.9.jar
+trino-jdbc-403-amzn-0.jar
+```
