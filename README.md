@@ -165,7 +165,7 @@ admin@% current_user,  8.0.23 version()
 - https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-common
 - https://mvnrepository.com/artifact/org.apache.hive/hive-jdbc
 
-This is the list of JAR files I used to compile the code:
+This is the list of JAR files I used to compile and test the code:
 ```
 aws-java-sdk-core-1.12.397.jar
 aws-java-sdk-s3-1.12.397.jar
@@ -182,5 +182,6 @@ jackson-annotations-2.12.7.jar
 jackson-core-2.12.7.jar
 jackson-databind-2.12.7.1.jar
 joda-time-2.9.9.jar
+mariadb-java-client-2.7.2.jar
 trino-jdbc-403-amzn-0.jar
 ```
