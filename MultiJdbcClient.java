@@ -55,6 +55,8 @@ import java.io.Console;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 public class MultiJdbcClient {
 
@@ -343,7 +345,18 @@ public class MultiJdbcClient {
 	                        System.exit(1);
 			}
 			Class.forName(driverClass);
+			if ( ! url.startsWith("jdbc:") ) {
+				System.out.println("Invalid URL: " + url + "\nConnection string must begin with 'jdbc:'");
+				System.exit(1);
+			}
 			if ( jdbcPars != null ) url += jdbcPars;
+			try {
+				host = new URI(url.substring(5)).getHost();
+				port = Integer.toString(new URI(url.substring(5)).getPort());
+				service = new URI(url.substring(5)).getScheme();
+			} catch (URISyntaxException e) {
+				e.printStackTrace();
+			}
 			break;
 
 		default:
@@ -355,9 +368,9 @@ public class MultiJdbcClient {
 	if ( propFile != null ) System.out.println("propFile: " + propFile);
 	System.out.println("user: " + user);
 	if ( password != null ) System.out.println("password is set");
-	if ( !service.equals("generic") ) {
-		System.out.println("host: " + host);
-		System.out.println("port: " + port);
+	System.out.println("host: " + host);
+	System.out.println("port: " + port);
+	if ( ! cmd.getOptionValue("service").equals("generic") ) {
 		if ( kerberos ) {
 			System.out.println("kerberos is enabled");
 			System.out.println("krbConf: " + krbConf);
