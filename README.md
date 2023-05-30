@@ -11,6 +11,12 @@ FEEDBACK/BUGS: Please contact me by email.
 ## Description
 All-purpose JDBC client with an emphasis on HiveServer2 and Trino.
 
+**Version 2.1**
+- Unless manually entered, password must be Base64-encoded:
+  - System property
+  - Command-line argument
+  - Properties file
+
 **Version 2.0**
 - Support for generic JDBC connectivity: `-s generic --url <jdbc_connection_string> --driverClass <jdbc_class_name>`
 - Prompt for password if not provided in command argument: `-w,--password`
@@ -79,7 +85,9 @@ usage: MultiJdbcClient [--b64keytab <arg>] [--b64krbConf <arg>] [-c <arg>] [-d <
     --url <arg>            JDBC connection URL (generic data source)
  -w,--password <arg>       Password
 ```
-Note: `--service phoenix` is equivalent to `--service trino --catalog phoenix`.
+Notes:
+- `--service phoenix` is equivalent to `--service trino --catalog phoenix`
+- Supported system properties: `-Dpassword`, `-Db64keytab`, `-Db64krbConf`
 
 ## Sample Output
 ### Trino
