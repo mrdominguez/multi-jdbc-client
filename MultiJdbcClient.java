@@ -17,8 +17,8 @@
 /*
  * All-purpose JDBC client with an emphasis on HiveServer2 and Trino.
  * Author: Mariano Dominguez
- * Version: 2.0
- * Release date: 2023-05-27
+ * Version: 2.1
+ * Release date: 2023-05-30
  */
 
 import java.sql.Connection;
@@ -58,6 +58,7 @@ import java.io.InputStream;
 
 public class MultiJdbcClient {
 
+  public static Boolean b64Password = true;
   private static String getPassword() {
 	Console console = System.console();
 	if (console == null) {
@@ -67,6 +68,7 @@ public class MultiJdbcClient {
 
 	char[] password = console.readPassword("Enter password: ");
 	System.out.println();
+	E2EJdbcClient.b64Password = false;
 	return new String(password);
   }
 
@@ -225,7 +227,7 @@ public class MultiJdbcClient {
 	String host = cmd.hasOption("host") ? cmd.getOptionValue("host") : "localhost";
 	String port = cmd.hasOption("port") ? cmd.getOptionValue("port") : null;
 	String user = cmd.hasOption("user") ? cmd.getOptionValue("user") : null;
-	String password = cmd.hasOption("password") ? cmd.getOptionValue("password") == null ? getPassword() : cmd.getOptionValue("password") : null;
+	String password = cmd.hasOption("password") ? cmd.getOptionValue("password") == null ? getPassword() : cmd.getOptionValue("password") : System.getProperty("password");
 	Boolean kerberos = cmd.hasOption("kerberos") ? true : false;
 	String krbConf = cmd.hasOption("krbConf") ? cmd.getOptionValue("krbConf") : "/etc/krb5.conf";
 	String b64krbConf = cmd.hasOption("b64krbConf") ? cmd.getOptionValue("b64krbConf") : System.getProperty("b64krbConf");
@@ -268,6 +270,11 @@ public class MultiJdbcClient {
 			e.printStackTrace();
 			System.exit(1);
 		}
+	}
+
+	if ( password != null && E2EJdbcClient.b64Password ) {
+		byte[] decodedPassword = Base64.decode(password);
+		password = new String(decodedPassword);
 	}
 
 	if ( b64krbConf != null ) { 
