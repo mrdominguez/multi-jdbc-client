@@ -12,6 +12,7 @@ FEEDBACK/BUGS: Please contact me by email.
 All-purpose JDBC client with an emphasis on HiveServer2 and Trino.
 
 **Version 2.1**
+- Improved generic connection handling: URL parsing
 - Unless manually entered, password must be Base64-encoded:
   - System property
   - Command-line argument
