@@ -338,7 +338,7 @@ public class MultiJdbcClient {
 			Class.forName(driverClass);
 			if ( jdbcPars != null ) url += jdbcPars;
 			break;
-	
+
 		default:
 			System.out.println("Invalid service: " + service);
 			System.exit(1);
