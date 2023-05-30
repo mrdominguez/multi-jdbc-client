@@ -49,7 +49,7 @@ joda-time-2.9.9.jar
 mariadb-java-client-2.7.2.jar
 trino-jdbc-403-amzn-0.jar
 ```
-See links to [Maven artifacts](https://github.com/mrdominguez/multi-jdbc-client/blob/master/README.md#dependencies) below.
+Links to [Maven artifacts](https://github.com/mrdominguez/multi-jdbc-client/blob/master/README.md#dependencies) below.
 ```
 $ javac -cp *:. MultiJdbcClient.java && sudo java -cp *:. MultiJdbcClient
 
