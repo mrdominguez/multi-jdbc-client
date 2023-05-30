@@ -17,6 +17,19 @@ All-purpose JDBC client with an emphasis on HiveServer2 and Trino.
   - Command-line argument
   - Properties file
 
+How to use `base64` to encode:
+
+*String*
+```
+$ echo -n 'password' | base64
+cGFzc3dvcmQ=
+```
+*File*
+```
+$ base64 -w0 /path/to/file
+IyBMaWNlbnNlZCB0byB0aGUgQXBhY2hlIFN ...
+```
+
 **Version 2.0**
 - Support for generic JDBC connectivity: `-s generic --url <jdbc_connection_string> --driverClass <jdbc_class_name>`
 - Prompt for password if not provided in command argument: `-w,--password`
