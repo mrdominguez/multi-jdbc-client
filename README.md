@@ -179,9 +179,11 @@ $ java -cp MultiJdbcClient.jar MultiJdbcClient -s generic --url jdbc:mariadb://$
 --driverClass org.mariadb.jdbc.Driver -u admin -w -q 'select current_user, version()'
 Enter password:
 
-service: generic
+service: mariadb
 user: admin
 password is set
+host: *****
+port: 3306
 query: select current_user, version()
 Connected to jdbc:mariadb://*****:3306
 \__ Executing query...
