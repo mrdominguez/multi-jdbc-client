@@ -18,7 +18,7 @@ All-purpose JDBC client with an emphasis on HiveServer2 and Trino.
   - Command-line argument
   - Properties file
 
-How to use `base64` to encode:
+How to use `base64` to encode data:
 
 *String*
 ```
