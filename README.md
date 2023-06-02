@@ -4,7 +4,7 @@ AUTHOR: Mariano Dominguez
 <marianodominguez@hotmail.com>  
 https://www.linkedin.com/in/marianodominguez
 
-VERSION: 2.0
+VERSION: 2.1
 
 FEEDBACK/BUGS: Please contact me by email.
 
