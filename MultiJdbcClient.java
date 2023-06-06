@@ -270,6 +270,7 @@ public class MultiJdbcClient {
 			if ( prop.getProperty("driverClass") != null ) driverClass = prop.getProperty("driverClass");
 		} catch (IOException e) {
 			e.printStackTrace();
+			System.exit(1);
 		}
 	}
 
