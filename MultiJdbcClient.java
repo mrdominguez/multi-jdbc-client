@@ -337,7 +337,7 @@ public class MultiJdbcClient {
 			if ( port == null ) port = "8765";
 			if ( krbPrincipal == null ) krbPrincipal = "phoenix";
 			if ( keytab == null ) keytab = keytabFolder + krbPrincipal + ".keytab";
-			jdbcUrl = "jdbc:phoenix:thin:jdbcUrl=http://" + host + ":" + port + ";serialization=" + pqsSerde;
+			jdbcUrl = "jdbc:phoenix:thin:url=http://" + host + ":" + port + ";serialization=" + pqsSerde;
 			if ( kerberos ) jdbcUrl += ";authentication=" + pqsAuth
 				+ ";principal=" + krbPrincipal + "@" + krbRealm
 				+ ";keytab=" + keytab;
