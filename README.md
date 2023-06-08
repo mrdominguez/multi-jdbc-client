@@ -4,12 +4,26 @@ AUTHOR: Mariano Dominguez
 <marianodominguez@hotmail.com>  
 https://www.linkedin.com/in/marianodominguez
 
-VERSION: 2.1
+VERSION: 3.0
 
 FEEDBACK/BUGS: Please contact me by email.
 
 ## Description
-All-purpose JDBC client with an emphasis on HiveServer2 and Trino.
+All-purpose JDBC client with native support for:
+- HiveServer2
+- Trino
+- Phoenix (HBase)
+- Phoenix Query Server (PQS)
+
+**Version 3.0**
+- Added support for:
+  - Phoenix/HBase (`org.apache.phoenix.jdbc.PhoenixDriver`): `-s phoenix|hbase`
+    - HBase znode: `-z,--znode`
+    - Consider adding `hbase-site.xml` to CLASSPATH
+  - Phoenix Query Server (`org.apache.phoenix.queryserver.client.Driver`): `-s pqs`
+    - Serialization format: `--pqsSerde`
+    - Authentication mechanism: `--pqsAuth`
+- Minor code improvements
 
 **Version 2.1**
 - Improved generic connection handling: URL parsing
@@ -32,20 +46,25 @@ IyBMaWNlbnNlZCB0byB0aGUgQXBhY2hlIFN ...
 ```
 
 **Version 2.0**
-- Support for generic JDBC connectivity: `-s generic --url <jdbc_connection_string> --driverClass <jdbc_class_name>`
+- Support for generic JDBC connectivity: `-s generic`
+  - Connection URL: `--jdbcUrl`
+  - Driver class: `--jdbcDriver`
 - Prompt for password if not provided in command argument: `-w,--password`
 - Get all options (except `--service`) from properties file: `-f,--propFile`
   - The properties file has precedence over command-line options
 
 **Version 1.0**
-- Initial release for HiveServer2 and Trino: `-s hive|trino`
+- Initial release with support for:
+  - HiveServer2 (`org.apache.hive.jdbc.HiveDriver`): `-s hive`
+  - Trino (`io.trino.jdbc.TrinoDriver`): `-s trino`
 - Built-in Kerberos authentication mode: `-k,--kerberos`
 - Multiple options for Kerberos keytab (`--keytab`) and configuration (`--krbConf`) files:
   - Path to local file system
   - Path to S3 bucket (using underlying AWS credentials)
   - Base64 encoded data: `--b64keytab`, `--b64krbConf`
     - Base64 values have precedence over files
-- Support for additional JDBC parameters: `-j,--jdbcPars`
+- Additional parameters: `-j,--jdbcPars`
+- System properties: `-Dpassword`, `-Db64keytab`, `-Db64krbConf`
 - In Linux environments, send email notification (via `mail` command) when an error/exception occurs
 
 ## Compilation and Usage
@@ -59,6 +78,7 @@ commons-configuration2-2.8.0.jar
 commons-io-2.8.0.jar
 commons-lang3-3.12.0.jar
 commons-logging-1.1.3.jar
+commons-text-1.10.0.jar
 hadoop-auth-3.3.3-amzn-2.jar
 hadoop-common-3.3.3-amzn-2.jar
 hive-jdbc-3.1.3-amzn-3-standalone.jar
@@ -67,6 +87,8 @@ jackson-core-2.12.7.jar
 jackson-databind-2.12.7.1.jar
 joda-time-2.9.9.jar
 mariadb-java-client-2.7.2.jar
+phoenix-client-hbase-2.4-5.1.2.jar
+phoenix-queryserver-client-6.0.0.jar
 trino-jdbc-403-amzn-0.jar
 ```
 Links to [Maven artifacts](https://github.com/mrdominguez/multi-jdbc-client/blob/master/README.md#dependencies) below.
@@ -75,17 +97,19 @@ $ javac -cp *:. MultiJdbcClient.java && sudo java -cp *:. MultiJdbcClient
 
 Missing required option: s
 usage: MultiJdbcClient [--b64keytab <arg>] [--b64krbConf <arg>] [-c <arg>] [-d <arg>]
-       [--driverClass <arg>] [-f <arg>] [-h <arg>] [-j <arg>] [-k] [--keytab <arg>]
-       [--krbConf <arg>] [--krbPrincipal <arg>] [--krbRealm <arg>] [-m <arg>] [-p <arg>]
-       [-q <arg>] -s <arg> [-u <arg>] [--url <arg>] [-w <arg>]
+       [-f <arg>] [-h <arg>] [--jdbcDriver <arg>] [--jdbcPars <arg>] [--jdbcUrl <arg>]
+       [-k] [--keytab <arg>] [--krbConf <arg>] [--krbPrincipal <arg>] [--krbRealm <arg>]
+       [-m <arg>] [-p <arg>] [--pqsAuth <arg>] [--pqsSerde <arg>] [-q <arg>] -s <arg>
+       [-u <arg>] [-w <arg>] [-z <arg>]
     --b64keytab <arg>      Encoded keytab (base64)
     --b64krbConf <arg>     Encoded krb5.conf (base64)
  -c,--catalog <arg>        Trino catalog (default: hive)
  -d,--database <arg>       Database (default: default)
-    --driverClass <arg>    JDBC driver class (generic data source)
  -f,--propFile <arg>       Properties file
  -h,--host <arg>           Hostname
- -j,--jdbcPars <arg>       Additional JDBC parameters
+    --jdbcDriver <arg>     *Driver class (generic data source)
+    --jdbcPars <arg>       Additional parameters
+    --jdbcUrl <arg>        *Connection URL (generic data source)
  -k,--kerberos             Enable Kerberos authentication
     --keytab <arg>         Path to keytab file (local or S3)
     --krbConf <arg>        Path to krb5.conf (local or S3)
@@ -93,15 +117,14 @@ usage: MultiJdbcClient [--b64keytab <arg>] [--b64krbConf <arg>] [-c <arg>] [-d <
     --krbRealm <arg>       Kerberos realm
  -m,--email <arg>          Send email alerts
  -p,--port <arg>           Port
+    --pqsAuth <arg>        Authentication mechanism (default: SPENGO)
+    --pqsSerde <arg>       Serialization format (default: PROTOBUF)
  -q,--query <arg>          Query
- -s,--service <arg>        SQL service (trino, hive, phoenix, generic)
+ -s,--service <arg>        *SQL service (trino, hive, phoenix|hbase, pqs, generic)
  -u,--user <arg>           Username
-    --url <arg>            JDBC connection URL (generic data source)
  -w,--password <arg>       Password
+ -z,--znode <arg>          HBase znode (default: /hbase)
 ```
-Notes:
-- `--service phoenix` is equivalent to `--service trino --catalog phoenix`
-- Supported system properties: `-Dpassword`, `-Db64keytab`, `-Db64krbConf`
 
 ## Sample Output
 ### Trino
@@ -135,6 +158,7 @@ krbPrincipal=qa
 query=select current_user
 
 $ java -cp MultiJdbcClient.jar MultiJdbcClient -s trino -propFile trino.properties
+
 service: trino
 propFile: trino.properties
 user: qa
@@ -175,8 +199,8 @@ hadoop _c0,  3.1.3-amzn-3 rUnknown _c1,  default _c2
 ### Generic: MariaDB
 Password input from console:
 ```
-$ java -cp MultiJdbcClient.jar MultiJdbcClient -s generic --url jdbc:mariadb://$(hostname -f):3306 \
---driverClass org.mariadb.jdbc.Driver -u admin -w -q 'select current_user, version()'
+$ java -cp MultiJdbcClient.jar MultiJdbcClient -s generic --jdbcUrl jdbc:mariadb://$(hostname -f):3306 \
+--jdbcDriver org.mariadb.jdbc.Driver -u admin -w -q 'select current_user, version()'
 Enter password:
 
 service: mariadb
@@ -205,6 +229,10 @@ admin@% current_user,  8.0.23 version()
 - https://mvnrepository.com/artifact/joda-time/joda-time
 - https://mvnrepository.com/artifact/org.apache.commons/commons-configuration2
 - https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
+- https://mvnrepository.com/artifact/org.apache.commons/commons-text
 - https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-auth
 - https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-common
 - https://mvnrepository.com/artifact/org.apache.hive/hive-jdbc
+- https://mvnrepository.com/artifact/org.apache.phoenix/phoenix-client-hbase-2.4
+- https://mvnrepository.com/artifact/org.apache.phoenix/phoenix-queryserver-client
+- https://mvnrepository.com/artifact/org.mariadb.jdbc/mariadb-java-client
