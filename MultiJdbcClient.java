@@ -15,10 +15,15 @@
  */
 
 /*
- * All-purpose JDBC client with an emphasis on HiveServer2 and Trino.
+ * All-purpose JDBC client with native support for:
+ * - HiveServer2
+ * - Trino
+ * - Phoenix (HBase)
+ * - Phoenix Query Server (PQS)
+ *
  * Author: Mariano Dominguez
- * Version: 2.1
- * Release date: 2023-05-30
+ * Version: 3.0
+ * Release date: 2023-06-08
  */
 
 import java.sql.Connection;
@@ -60,7 +65,9 @@ import java.net.URISyntaxException;
 
 public class MultiJdbcClient {
 
-  public static Boolean b64Password = true;
+  private static MultiJdbcClient jdbcClient = new MultiJdbcClient();
+  private static Boolean b64Password = true;
+
   private static String getPassword() {
 	Console console = System.console();
 	if (console == null) {
@@ -69,8 +76,7 @@ public class MultiJdbcClient {
 	}
 
 	char[] password = console.readPassword("Enter password: ");
-	System.out.println();
-	E2EJdbcClient.b64Password = false;
+	jdbcClient.b64Password = false;
 	return new String(password);
   }
 
@@ -79,7 +85,7 @@ public class MultiJdbcClient {
 	Process p;
 	System.out.println ("Sending email alert...");
 	try {
-		String mailCmd = "echo -e \"" + body + "\" | mail -s \"Error: SQL Monitor\" " + email;
+		String mailCmd = "echo -e \"" + body + "\" | mail -s " + jdbcClient.getClass().getSimpleName() + " " + email;
 		String[] command = {
 			"/bin/sh",
 			"-c",
@@ -127,10 +133,9 @@ public class MultiJdbcClient {
   }
 
   public static void main(String args[]) throws SQLException, ClassNotFoundException {
-	MultiJdbcClient m = new MultiJdbcClient();
 	Options options = new Options();
 
-	Option serviceOpt = new Option("s", "service", true, "SQL service (trino, hive, phoenix, generic)");
+	Option serviceOpt = new Option("s", "service", true, "*SQL service (trino, hive, phoenix|hbase, pqs, generic)");
 	serviceOpt.setRequired(true);
 	options.addOption(serviceOpt);
 
@@ -195,21 +200,33 @@ public class MultiJdbcClient {
 	emailOpt.setRequired(false);
 	options.addOption(emailOpt);
 
-	Option jdbcParsOpt = new Option("j", "jdbcPars", true, "Additional JDBC parameters");
+	Option jdbcParsOpt = new Option(null, "jdbcPars", true, "Additional parameters");
 	jdbcParsOpt.setRequired(false);
 	options.addOption(jdbcParsOpt);
 
-	Option urlOpt = new Option(null, "url", true, "JDBC connection URL (generic data source)");
-	urlOpt.setRequired(false);
-	options.addOption(urlOpt);
+	Option jdbcUrlOpt = new Option(null, "jdbcUrl", true, "*Connection URL (generic data source)");
+	jdbcUrlOpt.setRequired(false);
+	options.addOption(jdbcUrlOpt);
 
-	Option driverClassOpt = new Option(null, "driverClass", true, "JDBC driver class (generic data source)");
-	driverClassOpt.setRequired(false);
-	options.addOption(driverClassOpt);
+	Option jdbcDriverOpt = new Option(null, "jdbcDriver", true, "*Driver class (generic data source)");
+	jdbcDriverOpt.setRequired(false);
+	options.addOption(jdbcDriverOpt);
 
 	Option propFileOpt = new Option("f", "propFile", true, "Properties file");
 	propFileOpt.setRequired(false);
 	options.addOption(propFileOpt);
+
+	Option znodeOpt = new Option("z", "znode", true, "HBase znode (default: /hbase)");
+	znodeOpt.setRequired(false);
+	options.addOption(znodeOpt);
+
+	Option pqsSerdeOpt = new Option(null, "pqsSerde", true, "Serialization format (default: PROTOBUF)");
+	pqsSerdeOpt.setRequired(false);
+	options.addOption(pqsSerdeOpt);
+
+	Option pqsAuthOpt = new Option(null, "pqsAuth", true, "Authentication mechanism (default: SPENGO)");
+	pqsAuthOpt.setRequired(false);
+	options.addOption(pqsAuthOpt);
 
 	CommandLineParser parser = new DefaultParser();
 	HelpFormatter formatter = new HelpFormatter();
@@ -219,7 +236,7 @@ public class MultiJdbcClient {
 		cmd = parser.parse(options, args);
 	} catch (ParseException e) {
 		System.out.println(e.getMessage());
-		formatter.printHelp(90, m.getClass().getSimpleName(), null, options, null, true);
+		formatter.printHelp(88, jdbcClient.getClass().getSimpleName(), null, options, null, true);
 		System.exit(1);
 	}
 
@@ -240,9 +257,12 @@ public class MultiJdbcClient {
 	String query = cmd.hasOption("query") ? cmd.getOptionValue("query") : "show schemas";
 	String email = cmd.hasOption("email") ? cmd.getOptionValue("email") : null;
 	String jdbcPars = cmd.hasOption("jdbcPars") ? cmd.getOptionValue("jdbcPars") : null;
-	String url = cmd.hasOption("url") ? cmd.getOptionValue("url") : null;
-	String driverClass = cmd.hasOption("driverClass") ? cmd.getOptionValue("driverClass") : null;
+	String jdbcUrl = cmd.hasOption("jdbcUrl") ? cmd.getOptionValue("jdbcUrl") : null;
+	String jdbcDriver = cmd.hasOption("jdbcDriver") ? cmd.getOptionValue("jdbcDriver") : null;
 	String propFile = cmd.hasOption("propFile") ? cmd.getOptionValue("propFile") : null;
+	String znode = cmd.hasOption("znode") ? cmd.getOptionValue("znode") : "/hbase";
+	String pqsSerde = cmd.hasOption("pqsSerde") ? cmd.getOptionValue("pqsSerde") : "PROTOBUF";
+	String pqsAuth = cmd.hasOption("pqsAuth") ? cmd.getOptionValue("pqsAuth") : "SPENGO";
 	Boolean krbConfS3 = false;
 	Boolean keytabS3 = false;
 
@@ -266,15 +286,18 @@ public class MultiJdbcClient {
 			if ( prop.getProperty("query") != null ) query = prop.getProperty("query");
 			if ( prop.getProperty("email") != null ) email = prop.getProperty("email");
 			if ( prop.getProperty("jdbcPars") != null ) jdbcPars = prop.getProperty("jdbcPars");
-			if ( prop.getProperty("url") != null ) url = prop.getProperty("url");
-			if ( prop.getProperty("driverClass") != null ) driverClass = prop.getProperty("driverClass");
+			if ( prop.getProperty("jdbcUrl") != null ) jdbcUrl = prop.getProperty("jdbcUrl");
+			if ( prop.getProperty("jdbcDriver") != null ) jdbcDriver = prop.getProperty("jdbcDriver");
+			if ( prop.getProperty("znode") != null ) znode = prop.getProperty("znode");
+			if ( prop.getProperty("pqsSerde") != null ) pqsSerde = prop.getProperty("pqsSerde");
+			if ( prop.getProperty("pqsAuth") != null ) pqsAuth = prop.getProperty("pqsAuth");
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
 		}
 	}
 
-	if ( password != null && E2EJdbcClient.b64Password ) {
+	if ( password != null && jdbcClient.b64Password ) {
 		byte[] decodedPassword = Base64.decode(password);
 		password = new String(decodedPassword);
 	}
@@ -297,32 +320,49 @@ public class MultiJdbcClient {
 		keytabS3 = true;
 	}
 	
+	String keytabFolder = "/etc/security/keytabs/";
 	switch (service) {
+		case "hbase":
 		case "phoenix":
-			catalog = "phoenix";
+			Class.forName("org.apache.phoenix.jdbc.PhoenixDriver");
+			if ( port == null ) port = "2181";
+			if ( krbPrincipal == null ) krbPrincipal = "phoenix";
+			if ( keytab == null ) keytab = keytabFolder + krbPrincipal + ".keytab";
+			jdbcUrl = "jdbc:phoenix:" + host + ":" + port + ":" + znode;
+			if ( kerberos ) jdbcUrl += ":" + krbPrincipal + "@" + krbRealm + ":" + keytab;
+			break;
+
+		case "pqs":
+			Class.forName("org.apache.phoenix.queryserver.client.Driver");
+			if ( port == null ) port = "8765";
+			if ( krbPrincipal == null ) krbPrincipal = "phoenix";
+			if ( keytab == null ) keytab = keytabFolder + krbPrincipal + ".keytab";
+			jdbcUrl = "jdbc:phoenix:thin:jdbcUrl=http://" + host + ":" + port + ";serialization=" + pqsSerde;
+			if ( kerberos ) jdbcUrl += ";authentication=" + pqsAuth
+				+ ";principal=" + krbPrincipal + "@" + krbRealm
+				+ ";keytab=" + keytab;
+			break;
+
 		case "trino":
 			Class.forName("io.trino.jdbc.TrinoDriver");
 			if ( port == null ) port = ( kerberos ) ? "7778" : "8889";
-			if ( keytab == null ) keytab = "/etc/trino/trino.keytab";
 			if ( krbPrincipal == null ) krbPrincipal = "trino";
-			if ( user == null ) user = krbPrincipal;
-			url = "jdbc:trino://" + host + ":" + port + "/" + catalog + "/" + database;
-			if ( kerberos ) url += "?KerberosKeytabPath=" + keytab
+			if ( keytab == null ) keytab = keytabFolder + krbPrincipal + ".keytab";
+			jdbcUrl = "jdbc:trino://" + host + ":" + port + "/" + catalog + "/" + database;
+			if ( kerberos ) jdbcUrl += "?KerberosKeytabPath=" + keytab
 				+ "&KerberosPrincipal=" + krbPrincipal + "@" + krbRealm
 				+ "&KerberosRemoteServiceName=trino&KerberosConfigPath=" + krbConf
 				+ "&SSL=true&SSLVerification=NONE";
-			if ( jdbcPars != null ) url += jdbcPars;
 			break;
 
 		case "hive":
 			Class.forName("org.apache.hive.jdbc.HiveDriver");
 			if ( port == null ) port = "10000";
 			if ( krbPrincipal == null ) krbPrincipal = "hadoop";
-			if ( user == null ) user = krbPrincipal;
-			url = "jdbc:hive2://" + host + ":" + port + "/" + database;
+			jdbcUrl = "jdbc:hive2://" + host + ":" + port + "/" + database;
 			if ( kerberos ) {
-				url += ";principal=hive/_HOST@" + krbRealm;
-				if ( keytab == null ) keytab = "/etc/hadoop.keytab";
+				jdbcUrl += ";principal=hive/_HOST@" + krbRealm;
+				if ( keytab == null ) keytab = keytabFolder + krbPrincipal + ".keytab";
 				try {
 					Configuration conf = new org.apache.hadoop.conf.Configuration();
 					conf.set("hadoop.security.authentication", "Kerberos");
@@ -336,24 +376,22 @@ public class MultiJdbcClient {
 					System.exit(1);
 				}
 			}
-			if ( jdbcPars != null ) url += jdbcPars;
 			break;
 
 		case "generic":
-			if ( url == null || driverClass == null || user == null ) {
-				System.out.println("Generic data source requires 'driverClass', 'url' and 'user'");
+			if ( jdbcUrl == null || jdbcDriver == null || user == null ) {
+				System.out.println("Generic data source requires 'jdbcDriver', 'jdbcUrl' and 'user'");
 	                        System.exit(1);
 			}
-			Class.forName(driverClass);
-			if ( ! url.startsWith("jdbc:") ) {
-				System.out.println("Invalid URL: " + url + "\nConnection string must begin with 'jdbc:'");
+			Class.forName(jdbcDriver);
+			if ( ! jdbcUrl.startsWith("jdbc:") ) {
+				System.out.println("Invalid URL: " + jdbcUrl + "\nConnection string must begin with 'jdbc:'");
 				System.exit(1);
 			}
-			if ( jdbcPars != null ) url += jdbcPars;
 			try {
-				host = new URI(url.substring(5)).getHost();
-				port = Integer.toString(new URI(url.substring(5)).getPort());
-				service = new URI(url.substring(5)).getScheme();
+				host = new URI(jdbcUrl.substring(5)).getHost();
+				port = Integer.toString(new URI(jdbcUrl.substring(5)).getPort());
+				service = new URI(jdbcUrl.substring(5)).getScheme();
 			} catch (URISyntaxException e) {
 				e.printStackTrace();
 			}
@@ -363,8 +401,10 @@ public class MultiJdbcClient {
 			System.out.println("Invalid service: " + service);
 			System.exit(1);
 	}
+	if ( user == null ) user = krbPrincipal;
+	if ( jdbcPars != null ) jdbcUrl += jdbcPars;
 
-	System.out.println("service: " + service);
+	System.out.println("\nservice: " + service);
 	if ( propFile != null ) System.out.println("propFile: " + propFile);
 	System.out.println("user: " + user);
 	if ( password != null ) System.out.println("password is set");
@@ -388,8 +428,8 @@ public class MultiJdbcClient {
 	if ( password != null ) properties.setProperty("password", password);
 
 	try {
-		Connection sqlConnection = DriverManager.getConnection(url, properties);
-		System.out.println("Connected to " + url);
+		Connection sqlConnection = DriverManager.getConnection(jdbcUrl, properties);
+		System.out.println("Connected to " + jdbcUrl);
 
 		Statement stmt = sqlConnection.createStatement();
 //		stmt.setMaxRows(10);
