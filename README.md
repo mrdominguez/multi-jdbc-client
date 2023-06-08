@@ -15,6 +15,7 @@ All-purpose JDBC client with native support for:
 - Phoenix (HBase)
 - Phoenix Query Server (PQS)
 
+## Release Notes 
 **Version 3.0**
 - Added support for:
   - Phoenix/HBase (`org.apache.phoenix.jdbc.PhoenixDriver`): `-s phoenix|hbase`
