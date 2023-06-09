@@ -10,18 +10,18 @@ FEEDBACK/BUGS: Please contact me by email.
 
 ## Description
 All-purpose JDBC client with native support for:
-- HiveServer2
-- Trino
-- Phoenix (HBase)
-- Phoenix Query Server (PQS)
+- HiveServer2 | `org.apache.hive.jdbc.HiveDriver`
+- Trino | `io.trino.jdbc.TrinoDriver`
+- Phoenix (HBase) | `org.apache.phoenix.jdbc.PhoenixDriver`
+- Phoenix Query Server (PQS) | `org.apache.phoenix.queryserver.client.Driver`
 
 ## Release Notes 
 **Version 3.0**
 - Added support for:
-  - Phoenix/HBase (`org.apache.phoenix.jdbc.PhoenixDriver`): `-s phoenix|hbase`
+  - Phoenix/HBase: `-s phoenix|hbase`
     - HBase znode: `-z,--znode`
-    - Consider adding `hbase-site.xml` to CLASSPATH
-  - Phoenix Query Server (`org.apache.phoenix.queryserver.client.Driver`): `-s pqs`
+    - Consider adding `hbase-site.xml` to Java's CLASSPATH
+  - Phoenix Query Server: `-s pqs`
     - Serialization format: `--pqsSerde`
     - Authentication mechanism: `--pqsAuth`
 - Minor code improvements
@@ -56,8 +56,8 @@ IyBMaWNlbnNlZCB0byB0aGUgQXBhY2hlIFN ...
 
 **Version 1.0**
 - Initial release with support for:
-  - HiveServer2 (`org.apache.hive.jdbc.HiveDriver`): `-s hive`
-  - Trino (`io.trino.jdbc.TrinoDriver`): `-s trino`
+  - HiveServer2: `-s hive`
+  - Trino: `-s trino`
 - Built-in Kerberos authentication mode: `-k,--kerberos`
 - Multiple options for Kerberos keytab (`--keytab`) and configuration (`--krbConf`) files:
   - Path to local file system
