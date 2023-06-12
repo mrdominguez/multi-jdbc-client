@@ -139,11 +139,11 @@ host: *****
 port: 7778
 kerberos is enabled
 krbConf: /etc/krb5.conf
-keytab: /etc/trino/trino.keytab
+keytab: /etc/security/keytabs/trino.keytab
 krbPrincipal: trino
 krbRealm: EC2.INTERNAL
 query: select current_user, version(), current_catalog, current_schema
-Connected to jdbc:trino://*****:7778/hive/default?KerberosKeytabPath=/etc/trino/trino.keytab&KerberosPrincipal=trino@EC2.INTERNAL&KerberosRemoteServiceName=trino&KerberosConfigPath=/etc/krb5.conf&SSL=true&SSLVerification=NONE
+Connected to jdbc:trino://*****:7778/hive/default?KerberosKeytabPath=/etc/security/keytabs/trino.keytab&KerberosPrincipal=trino@EC2.INTERNAL&KerberosRemoteServiceName=trino&KerberosConfigPath=/etc/krb5.conf&SSL=true&SSLVerification=NONE
 \__ Executing query...
 trino _col0,  403.amzn.0 _col1,  hive _col2,  default _col3
 ---
@@ -188,7 +188,7 @@ host: *****
 port: 10000
 kerberos is enabled
 krbConf: /etc/krb5.conf
-keytab: /etc/hadoop.keytab
+keytab: /etc/security/keytabs/hadoop.keytab
 krbPrincipal: hadoop
 krbRealm: EC2.INTERNAL
 query: select current_user(), version(), current_database()
