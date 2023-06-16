@@ -22,8 +22,8 @@
  * - Phoenix Query Server (PQS)
  *
  * Author: Mariano Dominguez
- * Version: 3.0
- * Release date: 2023-06-08
+ * Version: 3.1
+ * Release date: 2023-06-16
  */
 
 import java.sql.Connection;
@@ -52,6 +52,7 @@ import java.io.File;
 
 import com.amazonaws.util.Base64;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -80,12 +81,13 @@ public class MultiJdbcClient {
 	return new String(password);
   }
 
-  private static void emailAlert(String email, String body) {
+  private static void sendEmail(String email, String body, Exception ex) {
 	String s;
 	Process p;
-	System.out.println ("Sending email alert...");
+	if ( ex != null ) body += "\n\n" + ExceptionUtils.getStackTrace(ex);
+	System.out.println ("Sending email...");
 	try {
-		String mailCmd = "echo -e \"" + body + "\" | mail -s " + jdbcClient.getClass().getSimpleName() + " " + email;
+		String mailCmd = "echo -e \'" + body + "\' | mail -s " + jdbcClient.getClass().getSimpleName() + " " + email;
 		String[] command = {
 			"/bin/sh",
 			"-c",
@@ -104,13 +106,13 @@ public class MultiJdbcClient {
   	}
   }
 
-  private static void writeBase64ToFile(String content, String keytab, String email, String host, String service) {
+  private static void writeBase64ToFile(String content, String fileName, String email, String host, String service) {
 	try { 
 		byte[] bytes = Base64.decode(content);
-		FileUtils.writeByteArrayToFile(new File(keytab), bytes);
+		FileUtils.writeByteArrayToFile(new File(fileName), bytes);
 	} catch (Exception e) {
 		e.printStackTrace();
-		if ( email != null ) emailAlert(email, "host: " + host + "\nservice: " + service + "\n\n" + e);
+		if ( email != null ) sendEmail(email, "host: " + host + "\nservice: " + service, e);
 		System.exit(1);
 	}
   }
@@ -126,7 +128,7 @@ public class MultiJdbcClient {
 		S3Client.getObject(new GetObjectRequest(bucket,key), new File(localPath));
 	} catch (Exception e) {
 		e.printStackTrace();
-		if ( email != null ) emailAlert(email, "host: " + host + "\nservice: " + service + "\n\n" + e);
+		if ( email != null ) sendEmail(email, "host: " + host + "\nservice: " + service, e);
 		System.exit(1);
 	}
 	return localPath;
@@ -196,7 +198,7 @@ public class MultiJdbcClient {
 	queryOpt.setRequired(false);
 	options.addOption(queryOpt);
 
-	Option emailOpt = new Option("m", "email", true, "Send email alerts");
+	Option emailOpt = new Option("m", "email", true, "Send email");
 	emailOpt.setRequired(false);
 	options.addOption(emailOpt);
 
@@ -303,11 +305,11 @@ public class MultiJdbcClient {
 	}
 
 	if ( b64krbConf != null ) { 
-		krbConf = "krb5_" + RandomStringUtils.randomAlphanumeric(10).toUpperCase() + ".conf";
+		krbConf = System.getProperty("java.io.tmpdir") + "/" + RandomStringUtils.randomAlphanumeric(10).toUpperCase() + ".conf";
 		writeBase64ToFile(b64krbConf, krbConf, email, host, service);
 	}
 	if ( b64keytab != null ) { 
-		keytab = RandomStringUtils.randomAlphanumeric(10).toUpperCase() + ".keytab";
+		keytab = System.getProperty("java.io.tmpdir") + "/" + RandomStringUtils.randomAlphanumeric(10).toUpperCase() + ".keytab";
 		writeBase64ToFile(b64keytab, keytab, email, host, service);
 	}
 
@@ -372,7 +374,7 @@ public class MultiJdbcClient {
 					UserGroupInformation.loginUserFromKeytab(principal, keytab);
 				} catch (Exception e) {
 					e.printStackTrace();
-					if ( email != null ) emailAlert(email, "host: " + host + "\nservice: " + service + "\n\n" + e);
+					if ( email != null ) sendEmail(email, "host: " + host + "\nservice: " + service, e);
 					System.exit(1);
 				}
 			}
@@ -455,7 +457,7 @@ public class MultiJdbcClient {
 	} catch (Exception e) {
 		e.printStackTrace();
 		System.out.println("Exception caught!");
-		if ( email != null ) emailAlert(email, "host: " + host + "\nservice: " + service + "\n\n" + e);
+		if ( email != null ) sendEmail(email, "host: " + host + "\nservice: " + service, e);
 	} finally {
 		if ( b64krbConf != null || krbConfS3 ) new File(krbConf).delete();
 		if ( b64keytab != null || keytabS3 ) new File(keytab).delete();
