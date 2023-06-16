@@ -19,6 +19,7 @@ All-purpose JDBC client with native support for:
 **Version 3.1**
 - Temporary files (decoded data) use `java.io.tmpdir` (`/tmp` by default)
 - Included full exception stack trace in email body
+- Minor enhancements
 
 **Version 3.0**
 - Added support for:
