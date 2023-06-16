@@ -4,7 +4,7 @@ AUTHOR: Mariano Dominguez
 <marianodominguez@hotmail.com>  
 https://www.linkedin.com/in/marianodominguez
 
-VERSION: 3.0
+VERSION: 3.1
 
 FEEDBACK/BUGS: Please contact me by email.
 
@@ -16,6 +16,10 @@ All-purpose JDBC client with native support for:
 - Phoenix Query Server (PQS) | `org.apache.phoenix.queryserver.client.Driver`
 
 ## Release Notes 
+**Version 3.1**
+- Temporary files (decoded data) use `java.io.tmpdir` (`/tmp` by default)
+- Included full exception stack trace in email body
+
 **Version 3.0**
 - Added support for:
   - Phoenix/HBase: `-s phoenix|hbase`
@@ -116,7 +120,7 @@ usage: MultiJdbcClient [--b64keytab <arg>] [--b64krbConf <arg>] [-c <arg>] [-d <
     --krbConf <arg>        Path to krb5.conf (local or S3)
     --krbPrincipal <arg>   Keytab principal
     --krbRealm <arg>       Kerberos realm
- -m,--email <arg>          Send email alerts
+ -m,--email <arg>          Send email
  -p,--port <arg>           Port
     --pqsAuth <arg>        Authentication mechanism (default: SPENGO)
     --pqsSerde <arg>       Serialization format (default: PROTOBUF)
