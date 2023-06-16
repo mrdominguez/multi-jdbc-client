@@ -67,6 +67,9 @@ import java.net.URISyntaxException;
 public class MultiJdbcClient {
 
   private static MultiJdbcClient jdbcClient = new MultiJdbcClient();
+  private static String service;
+  private static String host;
+  private static String port;
   private static Boolean b64Password = true;
 
   private static String getPassword() {
@@ -81,11 +84,14 @@ public class MultiJdbcClient {
 	return new String(password);
   }
 
-  private static void sendEmail(String email, String body, Exception ex) {
+  private static void sendEmail(String email, Exception ex) {
 	String s;
 	Process p;
+	String body = "host: " + jdbcClient.host;
+	if ( jdbcClient.port != null ) body += "\nport: " + jdbcClient.port;
+	body += "\nservice: " + jdbcClient.service;
 	if ( ex != null ) body += "\n\n" + ExceptionUtils.getStackTrace(ex);
-	System.out.println ("Sending email...");
+	System.out.println("Sending email...");
 	try {
 		String mailCmd = "echo -e \'" + body + "\' | mail -s " + jdbcClient.getClass().getSimpleName() + " " + email;
 		String[] command = {
@@ -99,36 +105,40 @@ public class MultiJdbcClient {
 		while ((s = br.readLine()) != null)
 			System.out.println(s);
 		p.waitFor();
-		System.out.println ("\\__ exit: " + p.exitValue());
+		System.out.println("\\__ exit: " + p.exitValue());
 		p.destroy();
 	} catch (Exception e) {
 		e.printStackTrace();
   	}
   }
 
-  private static void writeBase64ToFile(String content, String fileName, String email, String host, String service) {
+  private static void writeBase64ToFile(String content, String fileName, String email) {
 	try { 
 		byte[] bytes = Base64.decode(content);
 		FileUtils.writeByteArrayToFile(new File(fileName), bytes);
 	} catch (Exception e) {
 		e.printStackTrace();
-		if ( email != null ) sendEmail(email, "host: " + host + "\nservice: " + service, e);
+		if ( email != null ) sendEmail(email, e);
 		System.exit(1);
 	}
   }
 
-  private static String downloadS3File(String S3Path, String email, String host, String service) {
+  private static String downloadS3File(String S3Path, String email) {
 	String localPath = null;
 	try {
 		AmazonS3URI S3URI = new AmazonS3URI(S3Path);
 		String bucket = S3URI.getBucket();
 		String key = S3URI.getKey();
+		if ( key == null ) {
+			System.out.println("Missing key from S3 path");
+			System.exit(1);
+		}
 		localPath = key.substring(key.lastIndexOf("/") + 1);
 		AmazonS3Client S3Client = new AmazonS3Client();
 		S3Client.getObject(new GetObjectRequest(bucket,key), new File(localPath));
 	} catch (Exception e) {
 		e.printStackTrace();
-		if ( email != null ) sendEmail(email, "host: " + host + "\nservice: " + service, e);
+		if ( email != null ) sendEmail(email, e);
 		System.exit(1);
 	}
 	return localPath;
@@ -242,11 +252,11 @@ public class MultiJdbcClient {
 		System.exit(1);
 	}
 
-	String service = cmd.getOptionValue("service");
+	service = cmd.getOptionValue("service");
 	String catalog = cmd.hasOption("catalog") ? cmd.getOptionValue("catalog") : "hive";
 	String database = cmd.hasOption("database") ? cmd.getOptionValue("database") : "default";
-	String host = cmd.hasOption("host") ? cmd.getOptionValue("host") : "localhost";
-	String port = cmd.hasOption("port") ? cmd.getOptionValue("port") : null;
+	host = cmd.hasOption("host") ? cmd.getOptionValue("host") : "localhost";
+	port = cmd.hasOption("port") ? cmd.getOptionValue("port") : null;
 	String user = cmd.hasOption("user") ? cmd.getOptionValue("user") : null;
 	String password = cmd.hasOption("password") ? cmd.getOptionValue("password") == null ? getPassword() : cmd.getOptionValue("password") : System.getProperty("password");
 	Boolean kerberos = cmd.hasOption("kerberos") ? true : false;
@@ -306,19 +316,19 @@ public class MultiJdbcClient {
 
 	if ( b64krbConf != null ) { 
 		krbConf = System.getProperty("java.io.tmpdir") + "/" + RandomStringUtils.randomAlphanumeric(10).toUpperCase() + ".conf";
-		writeBase64ToFile(b64krbConf, krbConf, email, host, service);
+		writeBase64ToFile(b64krbConf, krbConf, email);
 	}
 	if ( b64keytab != null ) { 
 		keytab = System.getProperty("java.io.tmpdir") + "/" + RandomStringUtils.randomAlphanumeric(10).toUpperCase() + ".keytab";
-		writeBase64ToFile(b64keytab, keytab, email, host, service);
+		writeBase64ToFile(b64keytab, keytab, email);
 	}
 
 	if ( krbConf.contains("s3://") ) {
-		krbConf = downloadS3File(krbConf, email, host, service);
+		krbConf = downloadS3File(krbConf, email);
 		krbConfS3 = true;
 	}
 	if ( keytab != null && keytab.contains("s3://") ) {
-		keytab = downloadS3File(keytab, email, host, service);
+		keytab = downloadS3File(keytab, email);
 		keytabS3 = true;
 	}
 	
@@ -374,7 +384,7 @@ public class MultiJdbcClient {
 					UserGroupInformation.loginUserFromKeytab(principal, keytab);
 				} catch (Exception e) {
 					e.printStackTrace();
-					if ( email != null ) sendEmail(email, "host: " + host + "\nservice: " + service, e);
+					if ( email != null ) sendEmail(email, e);
 					System.exit(1);
 				}
 			}
@@ -457,7 +467,7 @@ public class MultiJdbcClient {
 	} catch (Exception e) {
 		e.printStackTrace();
 		System.out.println("Exception caught!");
-		if ( email != null ) sendEmail(email, "host: " + host + "\nservice: " + service, e);
+		if ( email != null ) sendEmail(email, e);
 	} finally {
 		if ( b64krbConf != null || krbConfS3 ) new File(krbConf).delete();
 		if ( b64keytab != null || keytabS3 ) new File(keytab).delete();
