@@ -19,7 +19,7 @@ All-purpose JDBC client with native support for:
 **Version 3.2**
 - Temporary files from decoded data and downloaded from S3 use `java.io.tmpdir` (`/tmp` by default)
 - Full exception stack trace included in email body
-- Multiple code enhancements
+- Minor code improvements
 
 **Version 3.0**
 - Added support for:
@@ -29,7 +29,6 @@ All-purpose JDBC client with native support for:
   - Phoenix Query Server: `-s pqs`
     - Serialization format: `--pqsSerde`
     - Authentication mechanism: `--pqsAuth`
-- Minor code improvements
 
 **Version 2.1**
 - Improved generic connection handling: URL parsing
