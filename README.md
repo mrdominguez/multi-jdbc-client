@@ -133,7 +133,7 @@ usage: MultiJdbcClient [--b64keytab <arg>] [--b64krbConf <arg>] [-c <arg>] [-d <
 ```
 
 ## Sample Output
-### Trino
+### Trino (Hive catalog)
 ```
 $ java -cp MultiJdbcClient.jar MultiJdbcClient -s trino -h $(hostname -f) \
 -k -q 'select current_user, version(), current_catalog, current_schema'
