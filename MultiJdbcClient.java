@@ -70,6 +70,7 @@ public class MultiJdbcClient {
   private static String service;
   private static String host;
   private static String port;
+  private static String email;
   private static Boolean b64Password = true;
 
   private static String getPassword() {
@@ -112,18 +113,18 @@ public class MultiJdbcClient {
   	}
   }
 
-  private static void writeBase64ToFile(String content, String fileName, String email) {
+  private static void writeBase64ToFile(String content, String fileName) {
 	try { 
 		byte[] bytes = Base64.decode(content);
 		FileUtils.writeByteArrayToFile(new File(fileName), bytes);
 	} catch (Exception e) {
 		e.printStackTrace();
-		if ( email != null ) sendEmail(email, e);
+		if ( jdbcClient.email != null ) sendEmail(jdbcClient.email, e);
 		System.exit(1);
 	}
   }
 
-  private static String downloadS3File(String S3Path, String email) {
+  private static String downloadS3File(String S3Path) {
 	String localPath = null;
 	try {
 		AmazonS3URI S3URI = new AmazonS3URI(S3Path);
@@ -138,7 +139,7 @@ public class MultiJdbcClient {
 		S3Client.getObject(new GetObjectRequest(bucket,key), new File(localPath));
 	} catch (Exception e) {
 		e.printStackTrace();
-		if ( email != null ) sendEmail(email, e);
+		if ( jdbcClient.email != null ) sendEmail(jdbcClient.email, e);
 		System.exit(1);
 	}
 	return localPath;
@@ -267,7 +268,7 @@ public class MultiJdbcClient {
 	String krbPrincipal = cmd.hasOption("krbPrincipal") ? cmd.getOptionValue("krbPrincipal") : null;
 	String krbRealm = cmd.hasOption("krbRealm") ? cmd.getOptionValue("krbRealm") : "EC2.INTERNAL";
 	String query = cmd.hasOption("query") ? cmd.getOptionValue("query") : "show schemas";
-	String email = cmd.hasOption("email") ? cmd.getOptionValue("email") : null;
+	email = cmd.hasOption("email") ? cmd.getOptionValue("email") : null;
 	String jdbcPars = cmd.hasOption("jdbcPars") ? cmd.getOptionValue("jdbcPars") : null;
 	String jdbcUrl = cmd.hasOption("jdbcUrl") ? cmd.getOptionValue("jdbcUrl") : null;
 	String jdbcDriver = cmd.hasOption("jdbcDriver") ? cmd.getOptionValue("jdbcDriver") : null;
@@ -316,19 +317,19 @@ public class MultiJdbcClient {
 
 	if ( b64krbConf != null ) { 
 		krbConf = System.getProperty("java.io.tmpdir") + "/" + RandomStringUtils.randomAlphanumeric(10).toUpperCase() + ".conf";
-		writeBase64ToFile(b64krbConf, krbConf, email);
+		writeBase64ToFile(b64krbConf, krbConf);
 	}
 	if ( b64keytab != null ) { 
 		keytab = System.getProperty("java.io.tmpdir") + "/" + RandomStringUtils.randomAlphanumeric(10).toUpperCase() + ".keytab";
-		writeBase64ToFile(b64keytab, keytab, email);
+		writeBase64ToFile(b64keytab, keytab);
 	}
 
 	if ( krbConf.contains("s3://") ) {
-		krbConf = downloadS3File(krbConf, email);
+		krbConf = downloadS3File(krbConf);
 		krbConfS3 = true;
 	}
 	if ( keytab != null && keytab.contains("s3://") ) {
-		keytab = downloadS3File(keytab, email);
+		keytab = downloadS3File(keytab);
 		keytabS3 = true;
 	}
 	
