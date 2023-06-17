@@ -134,7 +134,7 @@ public class MultiJdbcClient {
 			System.out.println("Missing key from S3 path");
 			System.exit(1);
 		}
-		localPath = key.substring(key.lastIndexOf("/") + 1);
+		localPath = System.getProperty("java.io.tmpdir") + "/" + key.substring(key.lastIndexOf("/") + 1);
 		AmazonS3Client S3Client = new AmazonS3Client();
 		S3Client.getObject(new GetObjectRequest(bucket,key), new File(localPath));
 	} catch (Exception e) {
