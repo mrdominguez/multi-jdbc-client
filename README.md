@@ -31,7 +31,7 @@ All-purpose JDBC client with native support for:
     - Authentication mechanism: `--pqsAuth`
 
 **Version 2.1**
-- Improved generic connection handling: URL parsing
+- Enhanced generic connection handling: URL parsing
 - Unless manually entered upon prompt, password must be Base64-encoded:
   - System property
   - Command-line argument
