@@ -4,7 +4,7 @@ AUTHOR: Mariano Dominguez
 <marianodominguez@hotmail.com>  
 https://www.linkedin.com/in/marianodominguez
 
-VERSION: 3.1
+VERSION: 3.2
 
 FEEDBACK/BUGS: Please contact me by email.
 
@@ -16,7 +16,7 @@ All-purpose JDBC client with native support for:
 - Phoenix Query Server (PQS) | `org.apache.phoenix.queryserver.client.Driver`
 
 ## Release Notes 
-**Version 3.1**
+**Version 3.2**
 - Temporary files from decoded data and downloaded from S3 use `java.io.tmpdir` (`/tmp` by default)
 - Included full exception stack trace in email body
 - Multiple code enhancements
