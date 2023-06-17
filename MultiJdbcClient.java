@@ -22,8 +22,8 @@
  * - Phoenix Query Server (PQS)
  *
  * Author: Mariano Dominguez
- * Version: 3.1
- * Release date: 2023-06-16
+ * Version: 3.2
+ * Release date: 2023-06-17
  */
 
 import java.sql.Connection;
