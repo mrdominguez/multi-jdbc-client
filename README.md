@@ -4,7 +4,7 @@ AUTHOR: Mariano Dominguez
 <marianodominguez@hotmail.com>  
 https://www.linkedin.com/in/marianodominguez
 
-VERSION: 3.2
+VERSION: 4.0
 
 FEEDBACK/BUGS: Please contact me by email.
 
@@ -16,6 +16,21 @@ All-purpose JDBC client with native support for:
 - Phoenix Query Server (PQS) | `org.apache.phoenix.queryserver.client.Driver`
 
 ## Release Notes 
+**Version 4.0**
+- If Kerberos authentication (`-k`) is enabled, `--krbPrincipal` and `--keytab` are now required (no default values assumed)
+- New `hive` and `trino` options:
+  - Kerberos service name: `--krbServiceName`
+  - Kerberos service instance: `--krbServiceInstance`
+  - Kerberos realm (`hive` only): `--krbServiceRealm`
+
+`--krbServiceName ${USER} --krbServiceInstance ${HOST} --krbServiceRealm ${REALM}` is equivalent to the following JDBC parameters:
+- (`trino`) `KerberosServicePrincipalPattern=${USER}@${HOST}`
+- (`hive`) `principal=${USER}/${HOST}@${REALM}`
+
+If `krbServiceInstance` is not set, `${HOST}` gets replaced with...
+- (`trino`) the hostname of the Trino coordinator (after canonicalization if enabled)
+- (`hive`) a wildcard placeholder (`_HOST`) containing the fully qualified domain name (FQDN) of the server running the HiveServer daemon process
+
 **Version 3.2**
 - Temporary files downloaded from S3 or created as decoded data use `java.io.tmpdir` (`/tmp` by default)
 - Full exception stack trace included in email body
@@ -72,6 +87,24 @@ IyBMaWNlbnNlZCB0byB0aGUgQXBhY2hlIFN ...
 - System properties: `-Dpassword`, `-Db64keytab`, `-Db64krbConf`
 - In Linux environments, send email notification (via `mail` command) when an error/exception occurs
 
+## Default Values
+
+| Option | Value |
+| :---: | :---: |
+| `catalog` | hive |
+| `database` | default |
+| `host` | localhost |
+| `port` | `trino` 8889, 7778 (kerberos), `hive` 10000, `hbase` 2181, `pqs` 8765 |
+| `user` | `trino` trino, `hive` hive, `hbase` phoenix, `pqs` phoenix |
+| `krbConf` | /etc/krb5.conf |
+| `krbServiceName` | `trino` trino, `hive` hive |
+| `krbServiceInstance` | `trino` _null_, `hive` _HOST |
+| `krbRealm` | EC2.INTERNAL |
+| `query` | show schemas |
+| `znode` | /hbase |
+| `pqsSerde` | PROTOBUF |
+| `pqsAuth` | SPENGO |
+
 ## Compilation and Usage
 This is the list of JAR files I used to compile and test the code:
 ```
@@ -101,41 +134,43 @@ Links to [Maven artifacts](https://github.com/mrdominguez/multi-jdbc-client/blob
 $ javac -cp *:. MultiJdbcClient.java && sudo java -cp *:. MultiJdbcClient
 
 Missing required option: s
-usage: MultiJdbcClient [--b64keytab <arg>] [--b64krbConf <arg>] [-c <arg>] [-d <arg>]
-       [-f <arg>] [-h <arg>] [--jdbcDriver <arg>] [--jdbcPars <arg>] [--jdbcUrl <arg>]
-       [-k] [--keytab <arg>] [--krbConf <arg>] [--krbPrincipal <arg>] [--krbRealm <arg>]
-       [-m <arg>] [-p <arg>] [--pqsAuth <arg>] [--pqsSerde <arg>] [-q <arg>] -s <arg>
+usage: MultiJdbcClient [--b64keytab <arg>] [--b64krbConf <arg>] [-c <arg>] [-d <arg>] [-f <arg>] [-h <arg>] [--jdbcDriver <arg>]
+       [--jdbcPars <arg>] [--jdbcUrl <arg>] [-k] [--keytab <arg>] [--krbConf <arg>] [--krbPrincipal <arg>] [--krbServiceInstance <arg>]
+       [--krbServiceName <arg>] [--krbServiceRealm <arg>] [-m <arg>] [-p <arg>] [--pqsAuth <arg>] [--pqsSerde <arg>] [-q <arg>] -s <arg>
        [-u <arg>] [-w <arg>] [-z <arg>]
-    --b64keytab <arg>      Encoded keytab (base64)
-    --b64krbConf <arg>     Encoded krb5.conf (base64)
- -c,--catalog <arg>        Trino catalog (default: hive)
- -d,--database <arg>       Database (default: default)
- -f,--propFile <arg>       Properties file
- -h,--host <arg>           Hostname
-    --jdbcDriver <arg>     *Driver class (generic data source)
-    --jdbcPars <arg>       Additional parameters
-    --jdbcUrl <arg>        *Connection URL (generic data source)
- -k,--kerberos             Enable Kerberos authentication
-    --keytab <arg>         Path to keytab file (local or S3)
-    --krbConf <arg>        Path to krb5.conf (local or S3)
-    --krbPrincipal <arg>   Keytab principal
-    --krbRealm <arg>       Kerberos realm
- -m,--email <arg>          Send email
- -p,--port <arg>           Port
-    --pqsAuth <arg>        Authentication mechanism (default: SPENGO)
-    --pqsSerde <arg>       Serialization format (default: PROTOBUF)
- -q,--query <arg>          Query
- -s,--service <arg>        *SQL service (trino, hive, phoenix|hbase, pqs, generic)
- -u,--user <arg>           Username
- -w,--password <arg>       Password
- -z,--znode <arg>          HBase znode (default: /hbase)
+    --b64keytab <arg>            Encoded keytab (base64)
+    --b64krbConf <arg>           Encoded krb5.conf (base64)
+ -c,--catalog <arg>              Trino catalog (default: hive)
+ -d,--database <arg>             Database (default: default)
+ -f,--propFile <arg>             Properties file
+ -h,--host <arg>                 Hostname
+    --jdbcDriver <arg>           *Driver class
+    --jdbcPars <arg>             Additional parameters
+    --jdbcUrl <arg>              *Connection URL
+ -k,--kerberos                   Enable Kerberos authentication
+    --keytab <arg>               Path to keytab file (local or S3)
+    --krbConf <arg>              Path to krb5.conf (local or S3)
+    --krbPrincipal <arg>         Keytab principal
+    --krbServiceInstance <arg>   Kerberos service instance
+    --krbServiceName <arg>       Kerberos service name
+    --krbServiceRealm <arg>      Kerberos realm (hive only)
+ -m,--email <arg>                Send email
+ -p,--port <arg>                 Port
+    --pqsAuth <arg>              Authentication mechanism (default: SPENGO)
+    --pqsSerde <arg>             Serialization format (default: PROTOBUF)
+ -q,--query <arg>                Query
+ -s,--service <arg>              *SQL service (trino, hive, phoenix|hbase, pqs, generic)
+ -u,--user <arg>                 Username
+ -w,--password <arg>             Password
+ -z,--znode <arg>                HBase znode (default: /hbase)
 ```
 
 ## Sample Output
 ### Trino (Hive catalog)
 ```
-$ java -cp MultiJdbcClient.jar MultiJdbcClient -s trino -h $(hostname -f) \
--k -q 'select current_user, version(), current_catalog, current_schema'
+$ java -cp MultiJdbcClient.jar MultiJdbcClient -s trino -h $(hostname -f) -k \
+--keytab /etc/trino/trino.keytab --krbPrincipal trino \
+-q 'select current_user, version(), current_catalog, current_schema'
 
 service: trino
 user: trino
@@ -143,11 +178,13 @@ host: *****
 port: 7778
 kerberos is enabled
 krbConf: /etc/krb5.conf
-keytab: /etc/security/keytabs/trino.keytab
+keytab: /etc/trino/trino.keytab
 krbPrincipal: trino
-krbRealm: EC2.INTERNAL
+krbServiceName: trino
+krbServiceInstance is not set
 query: select current_user, version(), current_catalog, current_schema
-Connected to jdbc:trino://*****:7778/hive/default?KerberosKeytabPath=/etc/security/keytabs/trino.keytab&KerberosPrincipal=trino@EC2.INTERNAL&KerberosRemoteServiceName=trino&KerberosConfigPath=/etc/krb5.conf&SSL=true&SSLVerification=NONE
+jdbcUrl: jdbc:trino://*****:7778/hive/default?KerberosKeytabPath=/etc/trino/trino.keytab&KerberosPrincipal=trino&KerberosRemoteServiceName=trino&KerberosConfigPath=/etc/krb5.conf&SSL=true&SSLVerification=NONE
+Connection established
 \__ Executing query...
 trino _col0,  403.amzn.0 _col1,  hive _col2,  default _col3
 ---
@@ -173,9 +210,11 @@ kerberos is enabled
 krbConf: /etc/krb5.conf
 keytab: /etc/trino/qa.keytab
 krbPrincipal: qa
-krbRealm: EC2.INTERNAL
+krbServiceName: trino
+krbServiceInstance is not set
 query: select current_user
-Connected to jdbc:trino://*****:7778/hive/default?KerberosKeytabPath=/etc/trino/qa.keytab&KerberosPrincipal=qa@EC2.INTERNAL&KerberosRemoteServiceName=trino&KerberosConfigPath=/etc/krb5.conf&SSL=true&SSLVerification=NONE
+jdbcUrl: jdbc:trino://*****:7778/hive/default?KerberosKeytabPath=/etc/trino/qa.keytab&KerberosPrincipal=qa&KerberosRemoteServiceName=trino&KerberosConfigPath=/etc/krb5.conf&SSL=true&SSLVerification=NONE
+Connection established
 \__ Executing query...
 qa _col0
 ---
@@ -183,8 +222,9 @@ qa _col0
 
 ### HiveServer2
 ```
-$ java -cp MultiJdbcClient.jar MultiJdbcClient -s hive -h $(hostname -f) \
--k -q 'select current_user(), version(), current_database()'
+$ java -cp MultiJdbcClient.jar MultiJdbcClient -s hive -h $(hostname -f) -k \
+--keytab /etc/hadoop/hadoop.keytab --krbPrincipal hadoop/***** \
+-q 'select current_user(), version(), current_database()'
 
 service: hive
 user: hadoop
@@ -192,11 +232,14 @@ host: *****
 port: 10000
 kerberos is enabled
 krbConf: /etc/krb5.conf
-keytab: /etc/security/keytabs/hadoop.keytab
-krbPrincipal: hadoop
-krbRealm: EC2.INTERNAL
+keytab: /etc/hadoop/hadoop.keytab
+krbPrincipal: hadoop/*****
+krbServiceName: hive
+krbServiceInstance : _HOST
+krbServiceRealm: EC2.INTERNAL
 query: select current_user(), version(), current_database()
-Connected to jdbc:hive2://*****:10000/default;principal=hive/_HOST@EC2.INTERNAL
+jdbcUrl: jdbc:hive2://*****:10000/default;principal=hive/_HOST@EC2.INTERNAL
+Connection established
 \__ Executing query...
 hadoop _c0,  3.1.3-amzn-3 rUnknown _c1,  default _c2
 ---
