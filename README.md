@@ -87,24 +87,6 @@ IyBMaWNlbnNlZCB0byB0aGUgQXBhY2hlIFN ...
 - System properties: `-Dpassword`, `-Db64keytab`, `-Db64krbConf`
 - In Linux environments, send email notification (via `mail` command) when an error/exception occurs
 
-## Default Values
-
-| Option | Value |
-| :---: | :---: |
-| `catalog` | hive |
-| `database` | default |
-| `host` | localhost |
-| `port` | `trino` 8889, 7778 (kerberos), `hive` 10000, `hbase` 2181, `pqs` 8765 |
-| `user` | `trino` trino, `hive` hive, `hbase` phoenix, `pqs` phoenix |
-| `krbConf` | /etc/krb5.conf |
-| `krbServiceName` | `trino` trino, `hive` hive |
-| `krbServiceInstance` | `trino` _null_, `hive` _HOST |
-| `krbRealm` | EC2.INTERNAL |
-| `query` | show schemas |
-| `znode` | /hbase |
-| `pqsSerde` | PROTOBUF |
-| `pqsAuth` | SPENGO |
-
 ## Compilation and Usage
 This is the list of JAR files I used to compile and test the code:
 ```
@@ -165,6 +147,24 @@ usage: MultiJdbcClient [--b64keytab <arg>] [--b64krbConf <arg>] [-c <arg>] [-d <
  -z,--znode <arg>                HBase znode (default: /hbase)
 ```
 
+## Default Values
+
+| Option | Value |
+| :---: | :---: |
+| `catalog` | hive |
+| `database` | default |
+| `host` | localhost |
+| `port` | `trino` 8889, 7778 (kerberos), `hive` 10000, `hbase` 2181, `pqs` 8765 |
+| `user` | `trino` trino, `hive` hive, `hbase` phoenix, `pqs` phoenix |
+| `krbConf` | /etc/krb5.conf |
+| `krbServiceName` | `trino` trino, `hive` hive |
+| `krbServiceInstance` | `trino` _null_, `hive` _HOST |
+| `krbRealm` | EC2.INTERNAL |
+| `query` | show schemas |
+| `znode` | /hbase |
+| `pqsSerde` | PROTOBUF |
+| `pqsAuth` | SPENGO |
+
 ## Sample Output
 ### Trino (Hive catalog)
 ```
@@ -219,7 +219,6 @@ Connection established
 qa _col0
 ---
 ```
-
 ### HiveServer2
 ```
 $ java -cp MultiJdbcClient.jar MultiJdbcClient -s hive -h $(hostname -f) -k \
