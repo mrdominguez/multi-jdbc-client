@@ -22,8 +22,8 @@
  * - Phoenix Query Server (PQS)
  *
  * Author: Mariano Dominguez
- * Version: 3.2
- * Release date: 2023-06-17
+ * Version: 4.0
+ * Release date: 2023-06-20
  */
 
 import java.sql.Connection;
@@ -201,9 +201,17 @@ public class MultiJdbcClient {
 	krbPrincipalOpt.setRequired(false);
 	options.addOption(krbPrincipalOpt);
 
-	Option krbRealmOpt = new Option(null, "krbRealm", true, "Kerberos realm");
-	krbRealmOpt.setRequired(false);
-	options.addOption(krbRealmOpt);
+	Option krbServiceNameOpt = new Option(null, "krbServiceName", true, "Kerberos service name");
+	krbServiceNameOpt.setRequired(false);
+	options.addOption(krbServiceNameOpt);
+
+	Option krbServiceInstanceOpt = new Option(null, "krbServiceInstance", true, "Kerberos service instance");
+	krbServiceInstanceOpt.setRequired(false);
+	options.addOption(krbServiceInstanceOpt);
+
+	Option krbServiceRealmOpt = new Option(null, "krbServiceRealm", true, "Kerberos realm (hive only)");
+	krbServiceRealmOpt.setRequired(false);
+	options.addOption(krbServiceRealmOpt);
 
 	Option queryOpt = new Option("q", "query", true, "Query");
 	queryOpt.setRequired(false);
@@ -217,11 +225,11 @@ public class MultiJdbcClient {
 	jdbcParsOpt.setRequired(false);
 	options.addOption(jdbcParsOpt);
 
-	Option jdbcUrlOpt = new Option(null, "jdbcUrl", true, "*Connection URL (generic data source)");
+	Option jdbcUrlOpt = new Option(null, "jdbcUrl", true, "*Connection URL");
 	jdbcUrlOpt.setRequired(false);
 	options.addOption(jdbcUrlOpt);
 
-	Option jdbcDriverOpt = new Option(null, "jdbcDriver", true, "*Driver class (generic data source)");
+	Option jdbcDriverOpt = new Option(null, "jdbcDriver", true, "*Driver class");
 	jdbcDriverOpt.setRequired(false);
 	options.addOption(jdbcDriverOpt);
 
@@ -249,7 +257,7 @@ public class MultiJdbcClient {
 		cmd = parser.parse(options, args);
 	} catch (ParseException e) {
 		System.out.println(e.getMessage());
-		formatter.printHelp(88, jdbcClient.getClass().getSimpleName(), null, options, null, true);
+		formatter.printHelp(136, jdbcClient.getClass().getSimpleName(), null, options, null, true);
 		System.exit(1);
 	}
 
@@ -266,7 +274,9 @@ public class MultiJdbcClient {
 	String keytab = cmd.hasOption("keytab") ? cmd.getOptionValue("keytab") : null;
 	String b64keytab = cmd.hasOption("b64keytab") ? cmd.getOptionValue("b64keytab") : System.getProperty("b64keytab");
 	String krbPrincipal = cmd.hasOption("krbPrincipal") ? cmd.getOptionValue("krbPrincipal") : null;
-	String krbRealm = cmd.hasOption("krbRealm") ? cmd.getOptionValue("krbRealm") : "EC2.INTERNAL";
+	String krbServiceName = cmd.hasOption("krbServiceName") ? cmd.getOptionValue("krbServiceName") : null;
+	String krbServiceInstance = cmd.hasOption("krbServiceInstance") ? cmd.getOptionValue("krbServiceInstance") : null;
+	String krbServiceRealm = cmd.hasOption("krbServiceRealm") ? cmd.getOptionValue("krbServiceRealm") : "EC2.INTERNAL";
 	String query = cmd.hasOption("query") ? cmd.getOptionValue("query") : "show schemas";
 	email = cmd.hasOption("email") ? cmd.getOptionValue("email") : null;
 	String jdbcPars = cmd.hasOption("jdbcPars") ? cmd.getOptionValue("jdbcPars") : null;
@@ -295,7 +305,9 @@ public class MultiJdbcClient {
 			if ( prop.getProperty("keytab") != null ) keytab = prop.getProperty("keytab");
 			if ( prop.getProperty("b64keytab") != null ) b64keytab = prop.getProperty("b64keytab");
 			if ( prop.getProperty("krbPrincipal") != null ) krbPrincipal = prop.getProperty("krbPrincipal");
-			if ( prop.getProperty("krbRealm") != null ) krbRealm = prop.getProperty("krbRealm");
+			if ( prop.getProperty("krbServiceName") != null ) krbServiceName = prop.getProperty("krbServiceName");
+			if ( prop.getProperty("krbServiceInstance") != null ) krbServiceInstance = prop.getProperty("krbServiceInstance");
+			if ( prop.getProperty("krbServiceRealm") != null ) krbServiceRealm = prop.getProperty("krbServiceRealm");
 			if ( prop.getProperty("query") != null ) query = prop.getProperty("query");
 			if ( prop.getProperty("email") != null ) email = prop.getProperty("email");
 			if ( prop.getProperty("jdbcPars") != null ) jdbcPars = prop.getProperty("jdbcPars");
@@ -332,57 +344,63 @@ public class MultiJdbcClient {
 		keytab = downloadS3File(keytab);
 		keytabS3 = true;
 	}
-	
-	String keytabFolder = "/etc/security/keytabs/";
+
+	if ( kerberos && ( krbPrincipal == null || keytab == null ) ) {
+		System.out.println("Kerberos authentication requires 'krbPrincipal' and 'keytab'");
+		System.exit(1);
+	}
+
 	switch (service) {
 		case "hbase":
 		case "phoenix":
 			Class.forName("org.apache.phoenix.jdbc.PhoenixDriver");
+			if ( ! kerberos && user == null ) user = "phoenix";
 			if ( port == null ) port = "2181";
-			if ( krbPrincipal == null ) krbPrincipal = "phoenix";
-			if ( keytab == null ) keytab = keytabFolder + krbPrincipal + ".keytab";
 			jdbcUrl = "jdbc:phoenix:" + host + ":" + port + ":" + znode;
-			if ( kerberos ) jdbcUrl += ":" + krbPrincipal + "@" + krbRealm + ":" + keytab;
+			if ( kerberos ) jdbcUrl += ":" + krbPrincipal + ":" + keytab;
 			break;
 
 		case "pqs":
 			Class.forName("org.apache.phoenix.queryserver.client.Driver");
+			if ( ! kerberos && user == null ) user = "phoenix";
 			if ( port == null ) port = "8765";
-			if ( krbPrincipal == null ) krbPrincipal = "phoenix";
-			if ( keytab == null ) keytab = keytabFolder + krbPrincipal + ".keytab";
 			jdbcUrl = "jdbc:phoenix:thin:url=http://" + host + ":" + port + ";serialization=" + pqsSerde;
 			if ( kerberos ) jdbcUrl += ";authentication=" + pqsAuth
-				+ ";principal=" + krbPrincipal + "@" + krbRealm
+				+ ";principal=" + krbPrincipal
 				+ ";keytab=" + keytab;
 			break;
 
 		case "trino":
 			Class.forName("io.trino.jdbc.TrinoDriver");
+			if ( ! kerberos && user == null ) user = "trino";
 			if ( port == null ) port = ( kerberos ) ? "7778" : "8889";
-			if ( krbPrincipal == null ) krbPrincipal = "trino";
-			if ( keytab == null ) keytab = keytabFolder + krbPrincipal + ".keytab";
+			if ( krbServiceName == null ) krbServiceName = "trino";
 			jdbcUrl = "jdbc:trino://" + host + ":" + port + "/" + catalog + "/" + database;
-			if ( kerberos ) jdbcUrl += "?KerberosKeytabPath=" + keytab
-				+ "&KerberosPrincipal=" + krbPrincipal + "@" + krbRealm
-				+ "&KerberosRemoteServiceName=trino&KerberosConfigPath=" + krbConf
-				+ "&SSL=true&SSLVerification=NONE";
+			if ( kerberos ) {
+				jdbcUrl += "?KerberosKeytabPath=" + keytab
+					+ "&KerberosPrincipal=" + krbPrincipal
+					+ "&KerberosRemoteServiceName=" + krbServiceName
+					+ "&KerberosConfigPath=" + krbConf
+					+ "&SSL=true&SSLVerification=NONE";
+				if ( krbServiceInstance != null ) jdbcUrl += "&KerberosServicePrincipalPattern=" + krbServiceName + "@" + krbServiceInstance;
+			}
 			break;
 
 		case "hive":
 			Class.forName("org.apache.hive.jdbc.HiveDriver");
+			if ( ! kerberos && user == null ) user = "hive";
 			if ( port == null ) port = "10000";
-			if ( krbPrincipal == null ) krbPrincipal = "hadoop";
+			if ( krbServiceName == null ) krbServiceName = "hive";
+			if ( krbServiceInstance == null ) krbServiceInstance = "_HOST";
 			jdbcUrl = "jdbc:hive2://" + host + ":" + port + "/" + database;
 			if ( kerberos ) {
-				jdbcUrl += ";principal=hive/_HOST@" + krbRealm;
-				if ( keytab == null ) keytab = keytabFolder + krbPrincipal + ".keytab";
+				jdbcUrl += ";principal=" + krbServiceName + "/" + krbServiceInstance + "@" + krbServiceRealm;
 				try {
 					Configuration conf = new org.apache.hadoop.conf.Configuration();
 					conf.set("hadoop.security.authentication", "Kerberos");
 					conf.set("java.security.krb5.conf", krbConf);
-					String principal = cmd.hasOption("krbPrincipal") ? krbPrincipal + "@" + krbRealm : krbPrincipal + "/" + host + "@" + krbRealm;
 					UserGroupInformation.setConfiguration(conf);
-					UserGroupInformation.loginUserFromKeytab(principal, keytab);
+					UserGroupInformation.loginUserFromKeytab(krbPrincipal, keytab);
 				} catch (Exception e) {
 					e.printStackTrace();
 					if ( email != null ) sendEmail(email, e);
@@ -414,7 +432,7 @@ public class MultiJdbcClient {
 			System.out.println("Invalid service: " + service);
 			System.exit(1);
 	}
-	if ( user == null ) user = krbPrincipal;
+	if ( kerberos && user == null ) user = krbPrincipal.split("@")[0].split("/")[0];
 	if ( jdbcPars != null ) jdbcUrl += jdbcPars;
 
 	System.out.println("\nservice: " + service);
@@ -429,12 +447,20 @@ public class MultiJdbcClient {
 			System.out.println("krbConf: " + krbConf);
 			System.out.println("keytab: " + keytab);
 			System.out.println("krbPrincipal: " + krbPrincipal);
-			System.out.println("krbRealm: " + krbRealm);
+			System.out.println("krbServiceName: " + krbServiceName);
+			System.out.print("krbServiceInstance ");
+			if ( krbServiceInstance == null ) {
+				System.out.println("is not set");
+			} else {
+				System.out.println(": " + krbServiceInstance);
+			}
+			if ( service.equals("hive") ) System.out.println("krbServiceRealm: " + krbServiceRealm);
 		} else {
 			System.out.println("kerberos is disabled");
 		}
 	}
 	System.out.println("query: " + query);
+	System.out.println("jdbcUrl: " + jdbcUrl);
 
 	Properties properties = new Properties();
 	properties.setProperty("user", user); 
@@ -442,7 +468,7 @@ public class MultiJdbcClient {
 
 	try {
 		Connection sqlConnection = DriverManager.getConnection(jdbcUrl, properties);
-		System.out.println("Connected to " + jdbcUrl);
+		System.out.println("Connection established");
 
 		Statement stmt = sqlConnection.createStatement();
 //		stmt.setMaxRows(10);
