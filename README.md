@@ -78,9 +78,9 @@ IyBMaWNlbnNlZCB0byB0aGUgQXBhY2hlIFN ...
   - HiveServer2: `-s hive`
   - Trino: `-s trino`
 - Built-in Kerberos authentication mode: `-k,--kerberos`
-- Kerberos keytab (`--keytab`) and configuration (`--krbConf`) files can be:
-  - Path to local file system
-  - Path to S3 bucket (using underlying AWS credentials)
+- Both Kerberos keytab (`--keytab`) and configuration (`--krbConf`) files can be:
+  - A path to the local file system
+  - A path to an S3 bucket (using underlying AWS credentials)
   - Base64 encoded data: `--b64keytab`, `--b64krbConf`
     - Base64 values have precedence over files
 - Additional parameters: `-j,--jdbcPars`
