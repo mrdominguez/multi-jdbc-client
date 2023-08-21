@@ -22,8 +22,8 @@
  * - Phoenix Query Server (PQS)
  *
  * Author: Mariano Dominguez
- * Version: 4.0
- * Release date: 2023-06-20
+ * Version: 4.1
+ * Release date: 2023-08-21
  */
 
 import java.sql.Connection;
@@ -177,6 +177,10 @@ public class MultiJdbcClient {
 	passwordOpt.setOptionalArg(true);
 	options.addOption(passwordOpt);
 
+	Option sslOpt = new Option(null, "ssl", false, "Use SSL");
+	sslOpt.setRequired(false);
+	options.addOption(sslOpt);
+
 	Option kerberosOpt = new Option("k", "kerberos", false, "Enable Kerberos authentication");
 	kerberosOpt.setRequired(false);
 	options.addOption(kerberosOpt);
@@ -268,6 +272,7 @@ public class MultiJdbcClient {
 	port = cmd.hasOption("port") ? cmd.getOptionValue("port") : null;
 	String user = cmd.hasOption("user") ? cmd.getOptionValue("user") : null;
 	String password = cmd.hasOption("password") ? cmd.getOptionValue("password") == null ? getPassword() : cmd.getOptionValue("password") : System.getProperty("password");
+	Boolean ssl = cmd.hasOption("ssl") ? true : false;
 	Boolean kerberos = cmd.hasOption("kerberos") ? true : false;
 	String krbConf = cmd.hasOption("krbConf") ? cmd.getOptionValue("krbConf") : "/etc/krb5.conf";
 	String b64krbConf = cmd.hasOption("b64krbConf") ? cmd.getOptionValue("b64krbConf") : System.getProperty("b64krbConf");
@@ -299,6 +304,7 @@ public class MultiJdbcClient {
 			if ( prop.getProperty("port") != null ) port = prop.getProperty("port");
 			if ( prop.getProperty("user") != null ) user = prop.getProperty("user");
 			if ( prop.getProperty("password") != null ) password = prop.getProperty("password");
+			if ( prop.getProperty("ssl") != null ) ssl = Boolean.parseBoolean(prop.getProperty("ssl"));
 			if ( prop.getProperty("kerberos") != null ) kerberos = Boolean.parseBoolean(prop.getProperty("kerberos"));
 			if ( prop.getProperty("krbConf") != null ) krbConf = prop.getProperty("krbConf");
 			if ( prop.getProperty("b64krbConf") != null ) b64krbConf = prop.getProperty("b64krbConf");
@@ -380,10 +386,10 @@ public class MultiJdbcClient {
 				jdbcUrl += "?KerberosKeytabPath=" + keytab
 					+ "&KerberosPrincipal=" + krbPrincipal
 					+ "&KerberosRemoteServiceName=" + krbServiceName
-					+ "&KerberosConfigPath=" + krbConf
-					+ "&SSL=true&SSLVerification=NONE";
+					+ "&KerberosConfigPath=" + krbConf;
+				if ( ssl ) { jdbcUrl += "&SSL=true"; } else { jdbcUrl += "&SSL=true&SSLVerification=NONE"; }
 				if ( krbServiceInstance != null ) jdbcUrl += "&KerberosServicePrincipalPattern=" + krbServiceName + "@" + krbServiceInstance;
-			}
+			} else if ( ssl ) jdbcUrl += "?SSL=true";
 			break;
 
 		case "hive":
@@ -407,6 +413,7 @@ public class MultiJdbcClient {
 					System.exit(1);
 				}
 			}
+			if ( ssl ) jdbcUrl += ";ssl=true";
 			break;
 
 		case "generic":
