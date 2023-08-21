@@ -17,7 +17,7 @@ All-purpose JDBC client with native support for:
 **Version 4.1**
 - New `--ssl` option, which translates to `SSL=true` for `trino` and `ssl=true` for `hive` (parameters are case-sensitive). Additional ssl related parameters can be set using `--jdbcPars`
 
-In the case of `trino`, using TLS (and a configured shared secret) is required for Kerberos authentication. Thus, and for the sake of simplicity, `--kerberos` is equivalent to `--kerberos --ssl --jdbcPars '&SSLVerification=NONE'`
+In the case of `trino`, using TLS (and a configured shared secret) is required for Kerberos authentication. Thus, for the sake of simplicity, `--kerberos` is equivalent to `--kerberos --ssl --jdbcPars '&SSLVerification=NONE'`
 
 **Version 4.0**
 - If Kerberos authentication (`-k`) is enabled, `--krbPrincipal` and `--keytab` are now required (no default values assumed)
