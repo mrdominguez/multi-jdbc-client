@@ -4,8 +4,6 @@ AUTHOR: Mariano Dominguez
 <marianodominguez@hotmail.com>  
 https://www.linkedin.com/in/marianodominguez
 
-VERSION: 4.1
-
 FEEDBACK/BUGS: Please contact me by email.
 
 ## Description
