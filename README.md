@@ -4,7 +4,7 @@ AUTHOR: Mariano Dominguez
 <marianodominguez@hotmail.com>  
 https://www.linkedin.com/in/marianodominguez
 
-VERSION: 4.0
+VERSION: 4.1
 
 FEEDBACK/BUGS: Please contact me by email.
 
@@ -16,6 +16,11 @@ All-purpose JDBC client with native support for:
 - Phoenix Query Server (PQS) | `org.apache.phoenix.queryserver.client.Driver`
 
 ## Release Notes 
+**Version 4.1**
+- New `--ssl` option, which translates to `SSL=true` for `trino` and `ssl=true` for `hive` (parameters are case-sensitive). Additional ssl related parameters can be set using `--jdbcPars`
+
+In the case of `trino`, using TLS (and a configured shared secret) is required for Kerberos authentication. For the sake of simplicity, `--kerberos` is equivalent to `--kerberos --ssl --jdbcPars '&SSLVerification=NONE'`
+
 **Version 4.0**
 - If Kerberos authentication (`-k`) is enabled, `--krbPrincipal` and `--keytab` are now required (no default values assumed)
 - New `hive` and `trino` options:
@@ -119,7 +124,7 @@ Missing required option: s
 usage: MultiJdbcClient [--b64keytab <arg>] [--b64krbConf <arg>] [-c <arg>] [-d <arg>] [-f <arg>] [-h <arg>] [--jdbcDriver <arg>]
        [--jdbcPars <arg>] [--jdbcUrl <arg>] [-k] [--keytab <arg>] [--krbConf <arg>] [--krbPrincipal <arg>] [--krbServiceInstance <arg>]
        [--krbServiceName <arg>] [--krbServiceRealm <arg>] [-m <arg>] [-p <arg>] [--pqsAuth <arg>] [--pqsSerde <arg>] [-q <arg>] -s <arg>
-       [-u <arg>] [-w <arg>] [-z <arg>]
+       [--ssl] [-u <arg>] [-w <arg>] [-z <arg>]
     --b64keytab <arg>            Encoded keytab (base64)
     --b64krbConf <arg>           Encoded krb5.conf (base64)
  -c,--catalog <arg>              Trino catalog (default: hive)
@@ -142,6 +147,7 @@ usage: MultiJdbcClient [--b64keytab <arg>] [--b64krbConf <arg>] [-c <arg>] [-d <
     --pqsSerde <arg>             Serialization format (default: PROTOBUF)
  -q,--query <arg>                Query
  -s,--service <arg>              *SQL service (trino, hive, phoenix|hbase, pqs, generic)
+    --ssl                        Use SSL
  -u,--user <arg>                 Username
  -w,--password <arg>             Password
  -z,--znode <arg>                HBase znode (default: /hbase)
