@@ -8,16 +8,23 @@ FEEDBACK/BUGS: Please contact me by email.
 
 ## Description
 All-purpose JDBC client with native support for:
-- HiveServer2 | `org.apache.hive.jdbc.HiveDriver`
 - Trino | `io.trino.jdbc.TrinoDriver`
+- HiveServer2 (Hive) | `org.apache.hive.jdbc.HiveDriver`
 - Phoenix (HBase) | `org.apache.phoenix.jdbc.PhoenixDriver`
 - Phoenix Query Server (PQS) | `org.apache.phoenix.queryserver.client.Driver`
 
 ## Release Notes 
-**Version 4.1**
-- New `--ssl` option, which translates to `SSL=true` for `trino` and `ssl=true` for `hive` (parameters are case-sensitive). Additional ssl related parameters can be set using `--jdbcPars`
+**Version 4.2**
 
-In the case of `trino`, using TLS (and a configured shared secret) is required for Kerberos authentication. Thus, for the sake of simplicity, `--kerberos` is equivalent to `--kerberos --ssl --jdbcPars '&SSLVerification=NONE'`
+New SSL options:
+- `--https`, which translates to `SSL=true` for `trino` and `ssl=true` for `hive` (parameters are case-sensitive)
+- `--sslTrustStorePath`, which translates to `SSLTrustStorePath=<>` for `trino` and `sslTrustStore=<>` for `hive`
+- `--sslTrustStorePw`, which translates to `SSLTrustStorePassword=<>` for `trino` and `trustStorePassword=<>` for `hive` (it can be set as `-D` system property)
+- `--b64sslTrustStore`, base64 encoded TrustStore (also, system property)
+
+The password for the TrustStore must be Base64-encoded. Additional SSL related parameters can be set using `--jdbcPars`.
+
+In the case of `trino`, using TLS (and a configured shared secret) is required for Kerberos authentication. Thus, for the sake of simplicity, `--kerberos` is equivalent to `--kerberos --https --jdbcPars '&SSLVerification=NONE'`
 
 **Version 4.0**
 - If Kerberos authentication (`-k`) is enabled, `--krbPrincipal` and `--keytab` are now required (no default values assumed)
@@ -119,22 +126,24 @@ Links to [Maven artifacts](https://github.com/mrdominguez/multi-jdbc-client/blob
 $ javac -cp *:. MultiJdbcClient.java && sudo java -cp *:. MultiJdbcClient
 
 Missing required option: s
-usage: MultiJdbcClient [--b64keytab <arg>] [--b64krbConf <arg>] [-c <arg>] [-d <arg>] [-f <arg>] [-h <arg>] [--jdbcDriver <arg>]
-       [--jdbcPars <arg>] [--jdbcUrl <arg>] [-k] [--keytab <arg>] [--krbConf <arg>] [--krbPrincipal <arg>] [--krbServiceInstance <arg>]
-       [--krbServiceName <arg>] [--krbServiceRealm <arg>] [-m <arg>] [-p <arg>] [--pqsAuth <arg>] [--pqsSerde <arg>] [-q <arg>] -s <arg>
-       [--ssl] [-u <arg>] [-w <arg>] [-z <arg>]
+usage: MultiJdbcClient [--b64keytab <arg>] [--b64krbConf <arg>] [--b64sslTrustStore <arg>] [-c <arg>] [-d <arg>] [-f <arg>] [-h <arg>]
+       [--https] [--jdbcDriver <arg>] [--jdbcPars <arg>] [--jdbcUrl <arg>] [-k] [--keytab <arg>] [--krbConf <arg>] [--krbPrincipal
+       <arg>] [--krbServiceInstance <arg>] [--krbServiceName <arg>] [--krbServiceRealm <arg>] [-m <arg>] [-p <arg>] [--pqsAuth <arg>]
+       [--pqsSerde <arg>] [-q <arg>] -s <arg> [--sslTrustStorePath <arg>] [--sslTrustStorePw <arg>] [-u <arg>] [-w <arg>] [-z <arg>]
     --b64keytab <arg>            Encoded keytab (base64)
     --b64krbConf <arg>           Encoded krb5.conf (base64)
+    --b64sslTrustStore <arg>     Encoded TrustStore (base64)
  -c,--catalog <arg>              Trino catalog (default: hive)
  -d,--database <arg>             Database (default: default)
  -f,--propFile <arg>             Properties file
  -h,--host <arg>                 Hostname
+    --https                      Use SSL
     --jdbcDriver <arg>           *Driver class
     --jdbcPars <arg>             Additional parameters
     --jdbcUrl <arg>              *Connection URL
  -k,--kerberos                   Enable Kerberos authentication
     --keytab <arg>               Path to keytab file (local or S3)
-    --krbConf <arg>              Path to krb5.conf (local or S3)
+    --krbConf <arg>              Path to krb5.conf file (local or S3)
     --krbPrincipal <arg>         Keytab principal
     --krbServiceInstance <arg>   Kerberos service instance
     --krbServiceName <arg>       Kerberos service name
@@ -145,7 +154,8 @@ usage: MultiJdbcClient [--b64keytab <arg>] [--b64krbConf <arg>] [-c <arg>] [-d <
     --pqsSerde <arg>             Serialization format (default: PROTOBUF)
  -q,--query <arg>                Query
  -s,--service <arg>              *SQL service (trino, hive, phoenix|hbase, pqs, generic)
-    --ssl                        Use SSL
+    --sslTrustStorePath <arg>    Path to TrustStore file
+    --sslTrustStorePw <arg>      TrustStore password (base64)
  -u,--user <arg>                 Username
  -w,--password <arg>             Password
  -z,--znode <arg>                HBase znode (default: /hbase)
