@@ -16,14 +16,14 @@
 
 /*
  * All-purpose JDBC client with native support for:
- * - HiveServer2
  * - Trino
+ * - HiveServer2 (Hive)
  * - Phoenix (HBase)
  * - Phoenix Query Server (PQS)
  *
  * Author: Mariano Dominguez
- * Version: 4.1
- * Release date: 2023-08-21
+ * Version: 4.2
+ * Release date: 2023-08-29
  */
 
 import java.sql.Connection;
@@ -177,15 +177,27 @@ public class MultiJdbcClient {
 	passwordOpt.setOptionalArg(true);
 	options.addOption(passwordOpt);
 
-	Option sslOpt = new Option(null, "ssl", false, "Use SSL");
+	Option sslOpt = new Option(null, "https", false, "Use SSL");
 	sslOpt.setRequired(false);
 	options.addOption(sslOpt);
+
+	Option sslTrustStoreOpt = new Option(null, "sslTrustStorePath", true, "Path to TrustStore file");
+	sslTrustStoreOpt.setRequired(false);
+	options.addOption(sslTrustStoreOpt);
+
+	Option b64sslTrustStoreOpt = new Option(null, "b64sslTrustStore", true, "Encoded TrustStore (base64)");
+	b64sslTrustStoreOpt.setRequired(false);
+	options.addOption(b64sslTrustStoreOpt);
+
+	Option sslTrustStorePwOpt = new Option(null, "sslTrustStorePw", true, "TrustStore password (base64)");
+	sslTrustStorePwOpt.setRequired(false);
+	options.addOption(sslTrustStorePwOpt);
 
 	Option kerberosOpt = new Option("k", "kerberos", false, "Enable Kerberos authentication");
 	kerberosOpt.setRequired(false);
 	options.addOption(kerberosOpt);
 
-	Option krbConfOpt = new Option(null, "krbConf", true, "Path to krb5.conf (local or S3)");
+	Option krbConfOpt = new Option(null, "krbConf", true, "Path to krb5.conf file (local or S3)");
 	krbConfOpt.setRequired(false);
 	options.addOption(krbConfOpt);
 
@@ -272,7 +284,10 @@ public class MultiJdbcClient {
 	port = cmd.hasOption("port") ? cmd.getOptionValue("port") : null;
 	String user = cmd.hasOption("user") ? cmd.getOptionValue("user") : null;
 	String password = cmd.hasOption("password") ? cmd.getOptionValue("password") == null ? getPassword() : cmd.getOptionValue("password") : System.getProperty("password");
-	Boolean ssl = cmd.hasOption("ssl") ? true : false;
+	Boolean ssl = cmd.hasOption("https") ? true : false;
+	String sslTrustStore = cmd.hasOption("sslTrustStorePath") ? cmd.getOptionValue("sslTrustStorePath") : null;
+	String b64sslTrustStore = cmd.hasOption("b64sslTrustStore") ? cmd.getOptionValue("b64sslTrustStore") : System.getProperty("b64sslTrustStore");
+	String sslTrustStorePw = cmd.hasOption("sslTrustStorePw") ? cmd.getOptionValue("sslTrustStorePw") : System.getProperty("sslTrustStorePw");
 	Boolean kerberos = cmd.hasOption("kerberos") ? true : false;
 	String krbConf = cmd.hasOption("krbConf") ? cmd.getOptionValue("krbConf") : "/etc/krb5.conf";
 	String b64krbConf = cmd.hasOption("b64krbConf") ? cmd.getOptionValue("b64krbConf") : System.getProperty("b64krbConf");
@@ -291,6 +306,7 @@ public class MultiJdbcClient {
 	String znode = cmd.hasOption("znode") ? cmd.getOptionValue("znode") : "/hbase";
 	String pqsSerde = cmd.hasOption("pqsSerde") ? cmd.getOptionValue("pqsSerde") : "PROTOBUF";
 	String pqsAuth = cmd.hasOption("pqsAuth") ? cmd.getOptionValue("pqsAuth") : "SPENGO";
+	Boolean sslTrustStoreS3 = false;
 	Boolean krbConfS3 = false;
 	Boolean keytabS3 = false;
 
@@ -305,6 +321,9 @@ public class MultiJdbcClient {
 			if ( prop.getProperty("user") != null ) user = prop.getProperty("user");
 			if ( prop.getProperty("password") != null ) password = prop.getProperty("password");
 			if ( prop.getProperty("ssl") != null ) ssl = Boolean.parseBoolean(prop.getProperty("ssl"));
+			if ( prop.getProperty("sslTrustStorePath") != null ) sslTrustStore = prop.getProperty("sslTrustStorePath");
+			if ( prop.getProperty("b64sslTrustStore") != null ) b64sslTrustStore = prop.getProperty("b64sslTrustStore");
+			if ( prop.getProperty("sslTrustStorePw") != null ) sslTrustStorePw = prop.getProperty("sslTrustStorePw");
 			if ( prop.getProperty("kerberos") != null ) kerberos = Boolean.parseBoolean(prop.getProperty("kerberos"));
 			if ( prop.getProperty("krbConf") != null ) krbConf = prop.getProperty("krbConf");
 			if ( prop.getProperty("b64krbConf") != null ) b64krbConf = prop.getProperty("b64krbConf");
@@ -333,19 +352,36 @@ public class MultiJdbcClient {
 		password = new String(decodedPassword);
 	}
 
+	if ( b64sslTrustStore != null ) { 
+		sslTrustStore = System.getProperty("java.io.tmpdir") + "/" + RandomStringUtils.randomAlphanumeric(10).toUpperCase() + ".truststore";
+		writeBase64ToFile(b64sslTrustStore, sslTrustStore);
+	}
+
+	if ( sslTrustStorePw != null ) {
+		byte[] decodedPassword = Base64.decode(sslTrustStorePw);
+		sslTrustStorePw = new String(decodedPassword);
+	}
+
 	if ( b64krbConf != null ) { 
 		krbConf = System.getProperty("java.io.tmpdir") + "/" + RandomStringUtils.randomAlphanumeric(10).toUpperCase() + ".conf";
 		writeBase64ToFile(b64krbConf, krbConf);
 	}
+
 	if ( b64keytab != null ) { 
 		keytab = System.getProperty("java.io.tmpdir") + "/" + RandomStringUtils.randomAlphanumeric(10).toUpperCase() + ".keytab";
 		writeBase64ToFile(b64keytab, keytab);
+	}
+
+	if ( sslTrustStore != null && sslTrustStore.contains("s3://") ) {
+		sslTrustStore = downloadS3File(sslTrustStore);
+		sslTrustStoreS3 = true;
 	}
 
 	if ( krbConf.contains("s3://") ) {
 		krbConf = downloadS3File(krbConf);
 		krbConfS3 = true;
 	}
+
 	if ( keytab != null && keytab.contains("s3://") ) {
 		keytab = downloadS3File(keytab);
 		keytabS3 = true;
@@ -355,6 +391,8 @@ public class MultiJdbcClient {
 		System.out.println("Kerberos authentication requires 'krbPrincipal' and 'keytab'");
 		System.exit(1);
 	}
+
+	if ( ! ssl && ( sslTrustStore != null || sslTrustStorePw != null ) ) ssl = true;
 
 	switch (service) {
 		case "hbase":
@@ -387,9 +425,19 @@ public class MultiJdbcClient {
 					+ "&KerberosPrincipal=" + krbPrincipal
 					+ "&KerberosRemoteServiceName=" + krbServiceName
 					+ "&KerberosConfigPath=" + krbConf;
-				if ( ssl ) { jdbcUrl += "&SSL=true"; } else { jdbcUrl += "&SSL=true&SSLVerification=NONE"; }
 				if ( krbServiceInstance != null ) jdbcUrl += "&KerberosServicePrincipalPattern=" + krbServiceName + "@" + krbServiceInstance;
-			} else if ( ssl ) jdbcUrl += "?SSL=true";
+				if ( ! ssl ) jdbcUrl += "&SSL=true&SSLVerification=NONE";
+			}
+			if ( ssl ) {
+			       	if ( kerberos ) {
+					jdbcUrl += "&";
+				} else {
+					jdbcUrl += "?";
+				}
+				jdbcUrl += "SSL=true";
+				if ( sslTrustStore != null ) jdbcUrl += "&SSLTrustStorePath=" + sslTrustStore;
+				if ( sslTrustStorePw != null ) jdbcUrl += "&SSLTrustStorePassword=" + sslTrustStorePw;
+			}
 			break;
 
 		case "hive":
@@ -414,6 +462,8 @@ public class MultiJdbcClient {
 				}
 			}
 			if ( ssl ) jdbcUrl += ";ssl=true";
+			if ( sslTrustStore != null ) jdbcUrl += ";sslTrustStore=" + sslTrustStore;
+			if ( sslTrustStorePw != null ) jdbcUrl += ";trustStorePassword=" + sslTrustStorePw;
 			break;
 
 		case "generic":
@@ -465,6 +515,10 @@ public class MultiJdbcClient {
 		} else {
 			System.out.println("kerberos is disabled");
 		}
+
+		if ( ssl ) System.out.println("SSL is enabled");
+		if ( sslTrustStore != null ) System.out.println("sslTrustStore: " + sslTrustStore);
+		if ( sslTrustStorePw != null ) System.out.println("sslTrustStorePw is set");
 	}
 	System.out.println("query: " + query);
 	System.out.println("jdbcUrl: " + jdbcUrl);
@@ -503,6 +557,7 @@ public class MultiJdbcClient {
 		System.out.println("Exception caught!");
 		if ( email != null ) sendEmail(email, e);
 	} finally {
+		if ( b64sslTrustStore != null || sslTrustStoreS3 ) new File(sslTrustStore).delete();
 		if ( b64krbConf != null || krbConfS3 ) new File(krbConf).delete();
 		if ( b64keytab != null || keytabS3 ) new File(keytab).delete();
 	}
