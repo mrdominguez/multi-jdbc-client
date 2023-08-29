@@ -22,7 +22,7 @@ New SSL options:
 - `--sslTrustStorePw`, which translates to `SSLTrustStorePassword` for `trino` and `trustStorePassword` for `hive` and can be set as a system property
 - `--b64sslTrustStore`, base64 encoded TrustStore (also, system property)
 
-The password for the TrustStore must be Base64-encoded. Additional SSL related parameters can be set using `--jdbcPars`.
+The password for the TrustStore must be base64 encoded. Additional SSL related parameters can be set using `--jdbcPars`.
 
 In the case of `trino`, using TLS (and a configured shared secret) is required for Kerberos authentication. Thus, for the sake of simplicity, `--kerberos` is equivalent to `--kerberos --https --jdbcPars '&SSLVerification=NONE'`
 
@@ -57,7 +57,7 @@ If `krbServiceInstance` is not set, `${HOST}` gets replaced with...
 
 **Version 2.1**
 - Enhanced generic connection handling: URL parsing
-- Unless manually entered upon prompt, password must be Base64-encoded:
+- Unless manually entered upon prompt, password must be base64 encoded:
   - System property
   - Command-line argument
   - Properties file
