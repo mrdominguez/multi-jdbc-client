@@ -18,8 +18,8 @@ All-purpose JDBC client with native support for:
 
 New SSL options:
 - `--https`, which translates to `SSL=true` for `trino` and `ssl=true` for `hive` (parameters are case-sensitive)
-- `--sslTrustStorePath`, which translates to `SSLTrustStorePath=<>` for `trino` and `sslTrustStore=<>` for `hive`
-- `--sslTrustStorePw`, which translates to `SSLTrustStorePassword=<>` for `trino` and `trustStorePassword=<>` for `hive` (it can be set as `-D` system property)
+- `--sslTrustStorePath`, which translates to `SSLTrustStorePath` for `trino` and `sslTrustStore` for `hive`
+- `--sslTrustStorePw`, which translates to `SSLTrustStorePassword` for `trino` and `trustStorePassword` for `hive` (it can be set as `-D` system property)
 - `--b64sslTrustStore`, base64 encoded TrustStore (also, system property)
 
 The password for the TrustStore must be Base64-encoded. Additional SSL related parameters can be set using `--jdbcPars`.
