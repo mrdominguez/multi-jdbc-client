@@ -18,7 +18,7 @@ All-purpose JDBC client with native support for:
 - Added support for Kerberos authentication using ticket cache (`kinit`), that is, without keytab file
    - `--krbPrincipal` and `--keytab` are no longer required, as `-k` (enable Kerberos authentication) will check the underlying Kerberos credentials
 - Fixed: Unable to connect to remote kerberized HiveServer2 instance when setting `--krbConf`
-   - (`hive`) Setting `--krbConf` is equivalent to setting the `-Djava.security.krb5.conf` system property
+   - (`hive`) `--krbConf` is equivalent to the `-Djava.security.krb5.conf` system property
 
 **Version 4.2**
 
