@@ -14,6 +14,11 @@ All-purpose JDBC client with native support for:
 - Phoenix Query Server (PQS) | `org.apache.phoenix.queryserver.client.Driver`
 
 ## Release Notes 
+**Version 5.0**
+- Added support for Kerberos authentication using ticket cache (kinit), that is, without keytab file
+   - `--krbPrincipal` and `--keytab` are no longer required, as `-k` (enable Kerberos authentication) will check the underlying Kerberos credentials
+- Fixed: Unable to connect to remote kerberized HiveServer2 instance when setting `--krbConf`
+
 **Version 4.2**
 
 New SSL options:
