@@ -443,8 +443,8 @@ public class MultiJdbcClient {
 			if ( krbServiceName == null ) krbServiceName = "hive";
 			if ( krbServiceInstance == null ) krbServiceInstance = "_HOST";
 			jdbcUrl = "jdbc:hive2://" + host + ":" + port + "/" + database;
-			System.setProperty("java.security.krb5.conf", krbConf);
 			if ( kerberos ) {
+				System.setProperty("java.security.krb5.conf", krbConf);
 				jdbcUrl += ";principal=" + krbServiceName + "/" + krbServiceInstance + "@" + krbServiceRealm;
 				try {
 					Configuration conf = new org.apache.hadoop.conf.Configuration();
