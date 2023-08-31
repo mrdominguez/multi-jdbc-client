@@ -525,7 +525,7 @@ public class MultiJdbcClient {
 	System.out.println("jdbcUrl: " + jdbcUrl);
 
 	Properties properties = new Properties();
-	if ( user != null ) properties.setProperty("user", user); 
+	if ( user != null ) properties.setProperty("user", user);
 	if ( password != null ) properties.setProperty("password", password);
 
 	try {
