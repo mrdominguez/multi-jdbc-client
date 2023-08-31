@@ -133,8 +133,8 @@ $ javac -cp *:. MultiJdbcClient.java && sudo java -cp *:. MultiJdbcClient
 
 Missing required option: s
 usage: MultiJdbcClient [--b64keytab <arg>] [--b64krbConf <arg>] [--b64sslTrustStore <arg>] [-c <arg>] [-d <arg>] [-f <arg>] [-h <arg>]
-       [--https] [--jdbcDriver <arg>] [--jdbcPars <arg>] [--jdbcUrl <arg>] [-k] [--keytab <arg>] [--krbConf <arg>] [--krbPrincipal
-       <arg>] [--krbServiceInstance <arg>] [--krbServiceName <arg>] [--krbServiceRealm <arg>] [-m <arg>] [-p <arg>] [--pqsAuth <arg>]
+       [--https] [--jdbcDriver <arg>] [--jdbcPars <arg>] [--jdbcUrl <arg>] [-k] [--keytab <arg>] [--krbConf <arg>] [--krbPrincipal <arg>]
+       [--krbServiceInstance <arg>] [--krbServiceName <arg>] [--krbServiceRealm <arg>] [-m <arg>] [-p <arg>] [--pqsAuth <arg>]
        [--pqsSerde <arg>] [-q <arg>] -s <arg> [--sslTrustStorePath <arg>] [--sslTrustStorePw <arg>] [-u <arg>] [-w <arg>] [-z <arg>]
     --b64keytab <arg>            Encoded keytab (base64)
     --b64krbConf <arg>           Encoded krb5.conf (base64)
