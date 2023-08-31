@@ -429,7 +429,7 @@ public class MultiJdbcClient {
 				if ( ! ssl ) jdbcUrl += "&SSL=true&SSLVerification=NONE";
 			}
 			if ( ssl ) {
-			       	if ( kerberos ) { jdbcUrl += "&"; } else { jdbcUrl += "?"; }
+				if ( kerberos ) { jdbcUrl += "&"; } else { jdbcUrl += "?"; }
 				jdbcUrl += "SSL=true";
 				if ( sslTrustStore != null ) jdbcUrl += "&SSLTrustStorePath=" + sslTrustStore;
 				if ( sslTrustStorePw != null ) jdbcUrl += "&SSLTrustStorePassword=" + sslTrustStorePw;
