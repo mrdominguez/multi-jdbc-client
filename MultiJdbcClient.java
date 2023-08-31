@@ -273,7 +273,7 @@ public class MultiJdbcClient {
 		cmd = parser.parse(options, args);
 	} catch (ParseException e) {
 		System.out.println(e.getMessage());
-		formatter.printHelp(136, jdbcClient.getClass().getSimpleName(), null, options, null, true);
+		formatter.printHelp(137, jdbcClient.getClass().getSimpleName(), null, options, null, true);
 		System.exit(1);
 	}
 
