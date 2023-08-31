@@ -352,7 +352,7 @@ public class MultiJdbcClient {
 		password = new String(decodedPassword);
 	}
 
-	if ( b64sslTrustStore != null ) { 
+	if ( b64sslTrustStore != null ) {
 		sslTrustStore = System.getProperty("java.io.tmpdir") + "/" + RandomStringUtils.randomAlphanumeric(10).toUpperCase() + ".truststore";
 		writeBase64ToFile(b64sslTrustStore, sslTrustStore);
 	}
