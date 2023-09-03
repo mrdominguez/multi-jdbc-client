@@ -30,7 +30,7 @@ New SSL options:
 
 The password for the TrustStore must be base64 encoded. Additional SSL related parameters can be set using `--jdbcPars`.
 
-In the case of `trino`, using TLS (and a configured shared secret) is required for Kerberos authentication. Thus, for the sake of simplicity, `--kerberos` is equivalent to `--kerberos --https --jdbcPars '&SSLVerification=NONE'`
+In the case of `trino`, using TLS (and a configured shared secret) is required for Kerberos authentication. Thus, for the sake of simplicity, `--kerberos` is short for `--kerberos --https --jdbcPars '&SSLVerification=NONE'`
 
 **Version 4.0**
 - If Kerberos authentication (`-k`) is enabled, `--krbPrincipal` and `--keytab` are now required (no default values assumed)
@@ -39,7 +39,7 @@ In the case of `trino`, using TLS (and a configured shared secret) is required f
   - Kerberos service instance: `--krbServiceInstance`
   - Kerberos realm (`hive` only): `--krbServiceRealm`
 
-`--krbServiceName ${USER} --krbServiceInstance ${HOST} --krbServiceRealm ${REALM}` is equivalent to the following JDBC parameters:
+`--krbServiceName ${USER} --krbServiceInstance ${HOST} --krbServiceRealm ${REALM}` translates to the following JDBC parameters:
 - (`trino`) `KerberosServicePrincipalPattern=${USER}@${HOST}`
 - (`hive`) `principal=${USER}/${HOST}@${REALM}`
 
