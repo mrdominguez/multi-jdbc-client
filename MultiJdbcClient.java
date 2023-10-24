@@ -506,9 +506,9 @@ public class MultiJdbcClient {
 				System.out.println("krbPrincipal: " + krbPrincipal);
 			}
 			System.out.println("krbServiceName: " + krbServiceName);
-			System.out.print("krbServiceInstance ");
+			System.out.print("krbServiceInstance");
 			if ( krbServiceInstance == null ) {
-				System.out.println("is not set");
+				System.out.println(" is not set");
 			} else {
 				System.out.println(": " + krbServiceInstance);
 			}
